@@ -1,5 +1,7 @@
 #include "list.h"
 #include <assert.h>	// Instead of	#include "../debug.h"
+#include <stdlib.h>
+#include <time.h>
 #define ASSERT(CONDITION) assert(CONDITION)	// patched for proj0-2
 
 /* Our doubly linked lists have two header elements: the "head"
@@ -530,4 +532,33 @@ list_min (struct list *list, list_less_func *less, void *aux)
           min = e; 
     }
   return min;
+}
+
+void
+list_swap (struct list_elem *a, struct list_elem *b)
+{
+  a->prev->next = b;
+  a->next->prev = b;
+  b->prev->next = a;
+  b->next->prev = a;
+  swap(&(a->next),&(b->next));
+  swap(&(a->prev),&(b->prev));
+}
+
+void
+list_shuffle (struct list *list)
+{
+  struct list_elem *e1, *e2;
+  int rand_num;
+  int size = list_size(list);
+  int i, j;
+  srand(time(NULL));
+  ASSERT(list != NULL);
+  for(i = size; i > 0; i--)
+    {
+      rand_num = rand()%i;
+      for(j = 0, e1 = list_begin(list); j<rand_num; j++, e1 = list_next(e1));
+      for(j = 0, e2 = list_rbegin(list); j<size-i; j++, e2 = list_prev(e2));
+      list_swap(e1, e2);
+    }
 }
