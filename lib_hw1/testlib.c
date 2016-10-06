@@ -781,6 +781,8 @@ test_bitmap()
 	bitmap_command_mark(bitmaps);
       else if(!strcmp(command,"bitmap_all"))
 	bitmap_command_all(bitmaps);
+      else if(!strcmp(command,"bitmap_any"))
+	bitmap_command_any(bitmaps);
       else if(!strcmp(command,"quit"))
 	break;
   }
@@ -851,6 +853,26 @@ bitmap_command_all(struct bitmap **bitmaps)
   cnt = atoi(strtok(NULL, " "));
 
   if(bitmap_all(curr, start, cnt))
+    printf("true\n");
+  else
+    printf("false\n");
+}
+
+void
+bitmap_command_any(struct bitmap **bitmaps)
+{
+  char *name;
+  int idx, start, cnt;
+  struct bitmap *curr;
+
+  name = strtok(NULL, " ");
+  idx = name[2] - '0';
+  curr = bitmaps[idx];
+ 
+  start = atoi(strtok(NULL, " "));
+  cnt = atoi(strtok(NULL, " "));
+
+  if(bitmap_any(curr, start, cnt))
     printf("true\n");
   else
     printf("false\n");
