@@ -10,6 +10,12 @@ struct list_body
   int data;
 };
 
+struct hash_elem_body
+{
+  struct hash_elem point;
+  int data;
+};
+
 const char* basic_command[] = {
     "create",
     "delete",
@@ -17,10 +23,16 @@ const char* basic_command[] = {
     "quit"
 };
 
-const char* list_command[] = {
-    "list_reverse",
-    "list_sort"
-};
+/*
+ * insert
+ * apply
+ * delete
+ * empty
+ * size
+ * clear
+ * find
+ * replace
+ */
 
 void test_list();
 void test_hash();
@@ -51,4 +63,17 @@ void list_command_sort(struct list lists[10]);
 bool list_less(const struct list_elem *a, 
 	       const struct list_elem *b,
 	       void *aux);
+
+// Function for hash
+void create_hash(struct hash* elem);
+void dumpdata_hash(struct hash hashs[10]);
+void delete_hash(struct hash hashs[10]);
+void hash_command_insert(struct hash hashs[10]);
+void hash_action_destruct(struct hash_elem *e, void *aux);
+void hash_action_square(struct hash_elem *e, void *aux);
+void hash_action_triple(struct hash_elem *e, void *aux);
+bool hash_less(const struct hash_elem *a,
+	       const struct hash_elem *b,
+	       void *aux);
+
 #endif

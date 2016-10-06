@@ -23,7 +23,7 @@ int main()
 
 void test_list()
 {
-  struct list* lists = (struct list*)malloc(sizeof(struct list)*10);
+  struct list lists[10];
   char *name, *command;
   char tmp[51];
 
@@ -459,7 +459,113 @@ void list_command_sort(struct list lists[10])
 
 void test_hash()
 {
+  struct hash hashs[10];
+  char *name, *command;
+  char tmp[51];
 
+  name = strtok(NULL, " ");
+  create_hash(&hashs[name[4]-'0']);
+  while(true){
+      fgets(tmp,50,stdin);
+      tmp[strlen(tmp)-1] = '\0';
+      command = strtok(tmp," ");
+      
+      if(!strcmp(command,"create")){
+	  name = strtok(NULL, " ");
+	  name = strtok(NULL, " ");
+	  create_hash(&hashs[name[4]-'0']);
+      }
+      else if(!strcmp(command,"dumpdata"))
+	dumpdata_hash(hashs);
+      else if(!strcmp(command,"delete"))
+	delete_hash(hashs);
+      else if(!strcmp(command,"hash_insert"))
+	hash_command_insert(hashs);
+      else if(!strcmp(command,"quit"))
+	break;
+  }
+
+}
+
+unsigned hash_func(const struct hash_elem *e, void *aux)
+{
+  return hash_int((hash_entry(e, struct hash_elem_body, point))->data);
+}
+
+bool hash_less(const struct hash_elem *a,
+	       const struct hash_elem *b,
+	       void *aux)
+{
+  return (((hash_entry(a, struct hash_elem_body, point))->data) <
+	  ((hash_entry(b, struct hash_elem_body, point))->data));
+}
+
+void hash_action_destruct(struct hash_elem *e, void *aux)
+{
+  struct hash_elem_body *old = 
+    hash_entry(e, struct hash_elem_body, point);
+  free(old);
+}
+
+void hash_action_square(struct hash_elem *e, void *aux)
+{
+}
+
+void hash_action_triple(struct hash_elem *e, void *aux)
+{
+}
+
+void create_hash(struct hash* elem)
+{
+  hash_init(elem, hash_func, hash_less, NULL);
+}
+
+void dumpdata_hash(struct hash hashs[10])
+{
+  char *name;
+  struct hash *curr;
+  struct hash_iterator i;
+  int idx;	  
+  name = strtok(NULL, " ");
+  idx = name[4] - '0';
+  curr = &hashs[idx];
+
+  hash_first(&i, curr);
+  while(hash_next(&i)){
+      struct hash_elem_body *heb = hash_entry(hash_cur(&i), 
+					      struct hash_elem_body, point);
+      printf("%d ", heb->data);
+  }
+  printf("\n");
+}
+
+void delete_hash(struct hash hashs[10])
+{
+  char *name;
+  struct hash *curr;
+  int idx;
+
+  name = strtok(NULL, " ");
+  idx = name[4] - '0';
+  curr = &hashs[idx];
+  hash_destroy(curr, hash_action_destruct);
+}
+
+void hash_command_insert(struct hash hashs[10])
+{
+  char *name;
+  struct hash *curr;
+  struct hash_elem_body* new 
+    = (struct hash_elem_body*)malloc(sizeof(struct hash_elem_body));
+  int data, idx;
+
+  name = strtok(NULL, " ");
+  idx = name[4] - '0';
+  curr = &hashs[idx];
+  data = atoi(strtok(NULL, " "));
+  new->data = data;
+
+  hash_insert(curr,&(new->point));
 }
 
 void test_bitmap()
