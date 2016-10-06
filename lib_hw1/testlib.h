@@ -99,5 +99,6 @@ void bitmap_command_set(struct bitmap **bitmaps);
 void bitmap_command_set_multiple(struct bitmap **bitmaps);
 void bitmap_command_size(struct bitmap **bitmaps);
 void bitmap_command_test(struct bitmap **bitmaps);
+void bitmap_command_dump(struct bitmap **bitmaps);
 
 #endif

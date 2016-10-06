@@ -809,6 +809,8 @@ test_bitmap()
 	bitmap_command_size(bitmaps);
       else if(!strcmp(command,"bitmap_test"))
 	bitmap_command_test(bitmaps);
+      else if(!strcmp(command,"bitmap_dump"))
+	bitmap_command_dump(bitmaps);
       else if(!strcmp(command,"quit"))
 	break;
   }
@@ -1149,4 +1151,17 @@ bitmap_command_test(struct bitmap **bitmaps)
     printf("true\n");
   else
     printf("false\n");
+}
+
+void
+bitmap_command_dump(struct bitmap **bitmaps)
+{
+  char *name;
+  int idx;
+  struct bitmap *curr;
+
+  name = strtok(NULL, " ");
+  idx = name[2] - '0';
+  curr = bitmaps[idx];
+  bitmap_dump(curr);
 }
