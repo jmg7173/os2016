@@ -23,6 +23,26 @@ const char* basic_command[] = {
     "quit"
 };
 
+/*
+ * mark
+ * all
+ * any
+ * contains
+ * count
+ * expand
+ * set_all
+ * flip
+ * none
+ * reset
+ * scan
+ * scan_and_flip
+ * set
+ * set_all
+ * set_multiple
+ * size
+ * test
+ */
+
 void test_list();
 void test_hash();
 void test_bitmap();
@@ -71,5 +91,8 @@ void hash_action_triple(struct hash_elem *e, void *aux);
 bool hash_less(const struct hash_elem *a,
 	       const struct hash_elem *b,
 	       void *aux);
+
+// Function for bitmap
+
 
 #endif

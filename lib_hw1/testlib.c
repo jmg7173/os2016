@@ -4,7 +4,8 @@
 #include "testlib.h"
 
 // create, delete, dumpdata, quit, command
-int main()
+int
+main()
 {
   char command[51];
   char *type;
@@ -21,7 +22,8 @@ int main()
   return 0;
 }
 
-void test_list()
+void
+test_list()
 {
   struct list lists[10];
   char *name, *command;
@@ -86,7 +88,8 @@ void test_list()
   }
 }
 
-bool list_less(const struct list_elem *a,
+bool
+list_less(const struct list_elem *a,
 	       const struct list_elem *b,
 	       void *aux)
 {
@@ -94,12 +97,14 @@ bool list_less(const struct list_elem *a,
 	  ((list_entry(b, struct list_body, point))->data));
 }
 
-void create_list(struct list* elem)
+void
+create_list(struct list* elem)
 {
   list_init(elem);
 }
 
-void dumpdata_list(struct list lists[10])
+void
+dumpdata_list(struct list lists[10])
 {
   char *name;
   struct list_elem *e;
@@ -117,7 +122,8 @@ void dumpdata_list(struct list lists[10])
   printf("\n");
 }
 
-void delete_list(struct list lists[10])
+void
+delete_list(struct list lists[10])
 {
   char *name;
   struct list *curr;
@@ -135,7 +141,8 @@ void delete_list(struct list lists[10])
     }
 }
 
-void list_command_push_back(struct list lists[10])
+void
+list_command_push_back(struct list lists[10])
 {  
   char *name;
   struct list *curr;
@@ -151,7 +158,8 @@ void list_command_push_back(struct list lists[10])
   list_push_back(curr,&(new->point));
 }
 
-void list_command_push_front(struct list lists[10])
+void
+list_command_push_front(struct list lists[10])
 {  
   char *name;
   struct list *curr;
@@ -167,7 +175,8 @@ void list_command_push_front(struct list lists[10])
   list_push_front(curr,&(new->point));
 }
 
-void list_command_insert(struct list lists[10])
+void
+list_command_insert(struct list lists[10])
 {  
   char *name;
   struct list *curr;
@@ -191,7 +200,8 @@ void list_command_insert(struct list lists[10])
   list_insert(e, &(new->point));
 }
 
-void list_command_insert_ordered(struct list lists[10])
+void
+list_command_insert_ordered(struct list lists[10])
 {
   char *name;
   struct list *curr;
@@ -207,7 +217,8 @@ void list_command_insert_ordered(struct list lists[10])
   list_insert_ordered(curr, &(new->point), list_less, NULL);
 }
 
-void list_command_pop_back(struct list lists[10])
+void
+list_command_pop_back(struct list lists[10])
 {
   char *name;
   struct list *curr;
@@ -224,7 +235,8 @@ void list_command_pop_back(struct list lists[10])
   free(old);
 }
 
-void list_command_pop_front(struct list lists[10])
+void
+list_command_pop_front(struct list lists[10])
 {
   char *name;
   struct list *curr;
@@ -241,7 +253,8 @@ void list_command_pop_front(struct list lists[10])
   free(old);
 }
 
-void list_command_unique(struct list lists[10])
+void
+list_command_unique(struct list lists[10])
 {
   char *name;
   struct list *first, *second=NULL;
@@ -258,7 +271,8 @@ void list_command_unique(struct list lists[10])
   list_unique(first,second,list_less,NULL);
 }
 
-void list_command_splice(struct list lists[10])
+void
+list_command_splice(struct list lists[10])
 {
   char* name;
   int idx1, idx2;
@@ -291,7 +305,8 @@ void list_command_splice(struct list lists[10])
   list_splice(before, start, end);
 }
 
-void list_command_remove(struct list lists[10])
+void
+list_command_remove(struct list lists[10])
 {
   char *name;
   struct list *curr;
@@ -314,7 +329,8 @@ void list_command_remove(struct list lists[10])
   free(old);
 }
 
-void list_command_swap(struct list lists[10])
+void
+list_command_swap(struct list lists[10])
 {
   char *name;
   struct list *curr;
@@ -334,7 +350,8 @@ void list_command_swap(struct list lists[10])
   list_swap(e1, e2);
 }
 
-void list_command_size(struct list lists[10])
+void
+list_command_size(struct list lists[10])
 {
   char *name;
   struct list *curr;
@@ -347,7 +364,8 @@ void list_command_size(struct list lists[10])
   printf("%d\n",list_size(curr));
 }
 
-void list_command_empty(struct list lists[10])
+void
+list_command_empty(struct list lists[10])
 {
   char *name;
   struct list *curr;
@@ -363,7 +381,8 @@ void list_command_empty(struct list lists[10])
     printf("false\n");
 }
 
-void list_command_max(struct list lists[10])
+void
+list_command_max(struct list lists[10])
 {
   char *name;
   struct list *curr;
@@ -380,7 +399,8 @@ void list_command_max(struct list lists[10])
   printf("%d\n",body->data);
 }
 
-void list_command_min(struct list lists[10])
+void
+list_command_min(struct list lists[10])
 {
   char *name;
   struct list *curr;
@@ -397,7 +417,8 @@ void list_command_min(struct list lists[10])
   printf("%d\n",body->data);
 }
 
-void list_command_front(struct list lists[10])
+void
+list_command_front(struct list lists[10])
 {
   char *name;
   struct list *curr;
@@ -414,7 +435,8 @@ void list_command_front(struct list lists[10])
   printf("%d\n",body->data);
 }
 
-void list_command_back(struct list lists[10])
+void
+list_command_back(struct list lists[10])
 {
   char *name;
   struct list *curr;
@@ -431,7 +453,8 @@ void list_command_back(struct list lists[10])
   printf("%d\n",body->data);
 }
 
-void list_command_reverse(struct list lists[10])
+void
+list_command_reverse(struct list lists[10])
 {
   char *name;
   struct list *curr;
@@ -444,7 +467,8 @@ void list_command_reverse(struct list lists[10])
   list_reverse(curr);
 }
 
-void list_command_sort(struct list lists[10])
+void
+list_command_sort(struct list lists[10])
 {
   char *name;
   struct list *curr;
@@ -457,7 +481,8 @@ void list_command_sort(struct list lists[10])
   list_sort(curr, list_less, NULL);
 }
 
-void test_hash()
+void
+test_hash()
 {
   struct hash hashs[10];
   char *name, *command;
@@ -500,12 +525,14 @@ void test_hash()
   }
 }
 
-unsigned hash_func(const struct hash_elem *e, void *aux)
+unsigned
+hash_func(const struct hash_elem *e, void *aux)
 {
   return hash_int((hash_entry(e, struct hash_elem_body, point))->data);
 }
 
-bool hash_less(const struct hash_elem *a,
+bool
+hash_less(const struct hash_elem *a,
 	       const struct hash_elem *b,
 	       void *aux)
 {
@@ -513,14 +540,16 @@ bool hash_less(const struct hash_elem *a,
 	  ((hash_entry(b, struct hash_elem_body, point))->data));
 }
 
-void hash_action_destruct(struct hash_elem *e, void *aux)
+void
+hash_action_destruct(struct hash_elem *e, void *aux)
 {
   struct hash_elem_body *old = 
     hash_entry(e, struct hash_elem_body, point);
   free(old);
 }
 
-void hash_action_square(struct hash_elem *e, void *aux)
+void
+hash_action_square(struct hash_elem *e, void *aux)
 {
   struct hash_elem_body *heb = 
     hash_entry(e, struct hash_elem_body, point);
@@ -529,7 +558,8 @@ void hash_action_square(struct hash_elem *e, void *aux)
   heb->data = data;
 }
 
-void hash_action_triple(struct hash_elem *e, void *aux)
+void
+hash_action_triple(struct hash_elem *e, void *aux)
 {
   struct hash_elem_body *heb = 
     hash_entry(e, struct hash_elem_body, point);
@@ -538,12 +568,14 @@ void hash_action_triple(struct hash_elem *e, void *aux)
   heb->data = data;
 }
 
-void create_hash(struct hash* elem)
+void
+create_hash(struct hash* elem)
 {
   hash_init(elem, hash_func, hash_less, NULL);
 }
 
-void dumpdata_hash(struct hash hashs[10])
+void
+dumpdata_hash(struct hash hashs[10])
 {
   char *name;
   struct hash *curr;
@@ -555,14 +587,15 @@ void dumpdata_hash(struct hash hashs[10])
 
   hash_first(&i, curr);
   while(hash_next(&i)){
-      struct hash_elem_body *heb = hash_entry(hash_cur(&i), 
-					      struct hash_elem_body, point);
+      struct hash_elem_body *heb 
+	= hash_entry(hash_cur(&i), struct hash_elem_body, point);
       printf("%d ", heb->data);
   }
   printf("\n");
 }
 
-void delete_hash(struct hash hashs[10])
+void
+delete_hash(struct hash hashs[10])
 {
   char *name;
   struct hash *curr;
@@ -574,7 +607,8 @@ void delete_hash(struct hash hashs[10])
   hash_destroy(curr, hash_action_destruct);
 }
 
-void hash_command_insert(struct hash hashs[10])
+void
+hash_command_insert(struct hash hashs[10])
 {
   char *name;
   struct hash *curr;
@@ -591,7 +625,8 @@ void hash_command_insert(struct hash hashs[10])
   hash_insert(curr,&(new->point));
 }
 
-void hash_command_apply(struct hash hashs[10])
+void
+hash_command_apply(struct hash hashs[10])
 {
   char *name;
   struct hash *curr;
@@ -608,7 +643,8 @@ void hash_command_apply(struct hash hashs[10])
     hash_apply(curr,hash_action_triple);
 }
 
-void hash_command_empty(struct hash hashs[10])
+void
+hash_command_empty(struct hash hashs[10])
 {
   char *name;
   struct hash *curr;
@@ -624,7 +660,8 @@ void hash_command_empty(struct hash hashs[10])
     printf("false\n");
 }
 
-void hash_command_size(struct hash hashs[10])
+void
+hash_command_size(struct hash hashs[10])
 {
   char *name;
   struct hash *curr;
@@ -636,7 +673,8 @@ void hash_command_size(struct hash hashs[10])
   printf("%d\n",hash_size(curr));
 }
 
-void hash_command_clear(struct hash hashs[10])
+void
+hash_command_clear(struct hash hashs[10])
 {
   char *name;
   struct hash *curr;
@@ -649,7 +687,8 @@ void hash_command_clear(struct hash hashs[10])
   hash_clear(curr, hash_action_destruct);
 }
 
-void hash_command_find(struct hash hashs[10])
+void
+hash_command_find(struct hash hashs[10])
 {
   char *name;
   struct hash *curr;
@@ -669,7 +708,8 @@ void hash_command_find(struct hash hashs[10])
   }
 }
 
-void hash_command_replace(struct hash hashs[10])
+void
+hash_command_replace(struct hash hashs[10])
 {
   char *name;
   struct hash *curr;
@@ -692,7 +732,8 @@ void hash_command_replace(struct hash hashs[10])
   }
 }
 
-void hash_command_delete(struct hash hashs[10])
+void
+hash_command_delete(struct hash hashs[10])
 {
   char *name;
   struct hash *curr;
@@ -713,6 +754,32 @@ void hash_command_delete(struct hash hashs[10])
   }
 }
 
-void test_bitmap()
+void
+test_bitmap()
 {
+  struct bitmap bitmaps[10];
+  char *name, *command;
+  char tmp[51];
+
+  name = strtok(NULL, " ");
+  create_hash(&hashs[name[4]-'0']);
+  while(true){
+      fgets(tmp,50,stdin);
+      tmp[strlen(tmp)-1] = '\0';
+      command = strtok(tmp," ");
+      
+      if(!strcmp(command,"create")){
+	  name = strtok(NULL, " ");
+	  name = strtok(NULL, " ");
+	  create_hash(&hashs[name[4]-'0']);
+      }
+      else if(!strcmp(command,"dumpdata"))
+	dumpdata_hash(hashs);
+      else if(!strcmp(command,"delete"))
+	delete_hash(hashs);
+      else if(!strcmp(command,"hash_insert"))
+	hash_command_insert(hashs);
+      else if(!strcmp(command,"hash_apply"))
+	hash_command_apply(hashs);
+  }
 }
