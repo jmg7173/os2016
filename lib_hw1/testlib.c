@@ -493,6 +493,8 @@ void test_hash()
 	hash_command_find(hashs);
       else if(!strcmp(command,"hash_replace"))
 	hash_command_replace(hashs);
+      else if(!strcmp(command,"hash_delete"))
+	hash_command_delete(hashs);
       else if(!strcmp(command,"quit"))
 	break;
   }
@@ -684,6 +686,27 @@ void hash_command_replace(struct hash hashs[10])
   data = atoi(strtok(NULL, " "));
   new->data = data;
   old_elem = hash_replace(curr,&(new->point));
+  if(old_elem){
+      old = hash_entry(old_elem, struct hash_elem_body, point);
+      free(old);
+  }
+}
+
+void hash_command_delete(struct hash hashs[10])
+{
+  char *name;
+  struct hash *curr;
+  struct hash_elem *old_elem;
+  struct hash_elem_body *old;
+  struct hash_elem_body find;
+  int idx;
+
+  name = strtok(NULL, " ");
+  idx = name[4] - '0';
+  curr = &hashs[idx];
+
+  find.data = atoi(strtok(NULL, " "));
+  old_elem = hash_delete(curr,&(find.point));
   if(old_elem){
       old = hash_entry(old_elem, struct hash_elem_body, point);
       free(old);
