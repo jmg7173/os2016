@@ -785,15 +785,22 @@ test_bitmap()
 	bitmap_command_any(bitmaps);
       else if(!strcmp(command,"bitmap_contains"))
 	bitmap_command_contains(bitmaps);
+      else if(!strcmp(command,"bitmap_none"))
+	bitmap_command_none(bitmaps);
       else if(!strcmp(command,"bitmap_count"))
 	bitmap_command_count(bitmaps);
       else if(!strcmp(command,"bitmap_expand"))
 	bitmap_command_expand(bitmaps);
       else if(!strcmp(command,"bitmap_set_all"))
 	bitmap_command_set_all(bitmaps);
+      else if(!strcmp(command,"bitmap_flip"))
+	bitmap_command_flip(bitmaps);
+      else if(!strcmp(command,"bitmap_reset"))
+	bitmap_command_reset(bitmaps);
       else if(!strcmp(command,"quit"))
 	break;
   }
+  free(bitmaps);
 }
 
 void
@@ -917,6 +924,25 @@ bitmap_command_contains(struct bitmap **bitmaps)
 }
 
 void
+bitmap_command_none(struct bitmap **bitmaps)
+{
+  char *name;
+  int idx, start, cnt;
+  struct bitmap *curr;
+
+  name = strtok(NULL, " ");
+  idx = name[2] - '0';
+  curr = bitmaps[idx];
+
+  start = atoi(strtok(NULL, " "));
+  cnt = atoi(strtok(NULL, " "));
+
+  if(bitmap_none(curr, start, cnt))
+    printf("true\n");
+  else
+    printf("false\n");
+}
+void
 bitmap_command_count(struct bitmap **bitmaps)
 {
   char *name;
@@ -956,6 +982,21 @@ bitmap_command_expand(struct bitmap **bitmaps)
 }
 
 void
+bitmap_command_flip(struct bitmap **bitmaps)
+{
+  char *name;
+  int idx, bm_idx;
+  struct bitmap *curr;
+
+  name = strtok(NULL, " ");
+  idx = name[2] - '0';
+  curr = bitmaps[idx];
+
+  bm_idx = atoi(strtok(NULL, " "));
+  bitmap_flip(curr,bm_idx);
+}
+
+void
 bitmap_command_set_all(struct bitmap **bitmaps)
 {
   char *name;
@@ -971,4 +1012,18 @@ bitmap_command_set_all(struct bitmap **bitmaps)
     bitmap_set_all(curr,true);
   else
     bitmap_set_all(curr,false);
+}
+
+void
+bitmap_command_reset(struct bitmap **bitmaps)
+{
+  char *name;
+  int idx, bm_idx;
+  struct bitmap *curr;
+  name = strtok(NULL, " ");
+  idx = name[2] - '0';
+  curr = bitmaps[idx];
+
+  bm_idx = atoi(strtok(NULL, " "));
+  bitmap_reset(curr,bm_idx);
 }

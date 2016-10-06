@@ -381,8 +381,7 @@ bitmap_expand(struct bitmap* bitmap, int size)
     {
       size_t old_cnt = bitmap->bit_cnt;
       bitmap->bit_cnt += size;
-      free(bitmap->bits);
-      bitmap->bits = (elem_type*)malloc(byte_cnt(bitmap->bit_cnt));
+      bitmap->bits = (elem_type*)realloc(bitmap->bits,byte_cnt(bitmap->bit_cnt));
       if(bitmap->bits != NULL || size == 0)
 	{
 	  bitmap_set_multiple(bitmap, old_cnt, size, false);
