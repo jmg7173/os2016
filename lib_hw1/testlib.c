@@ -481,10 +481,19 @@ void test_hash()
 	delete_hash(hashs);
       else if(!strcmp(command,"hash_insert"))
 	hash_command_insert(hashs);
+      else if(!strcmp(command,"hash_apply"))
+	hash_command_apply(hashs);
+      else if(!strcmp(command,"hash_empty"))
+	hash_command_empty(hashs);
+      else if(!strcmp(command,"hash_size"))
+	hash_command_size(hashs);
+      else if(!strcmp(command,"hash_clear"))
+	hash_command_clear(hashs);
+      else if(!strcmp(command,"hash_find"))
+	hash_command_find(hashs);
       else if(!strcmp(command,"quit"))
 	break;
   }
-
 }
 
 unsigned hash_func(const struct hash_elem *e, void *aux)
@@ -509,10 +518,20 @@ void hash_action_destruct(struct hash_elem *e, void *aux)
 
 void hash_action_square(struct hash_elem *e, void *aux)
 {
+  struct hash_elem_body *heb = 
+    hash_entry(e, struct hash_elem_body, point);
+  int data = heb->data;
+  data = data * data;
+  heb->data = data;
 }
 
 void hash_action_triple(struct hash_elem *e, void *aux)
 {
+  struct hash_elem_body *heb = 
+    hash_entry(e, struct hash_elem_body, point);
+  int data = heb->data;
+  data = data * data * data;
+  heb->data = data;
 }
 
 void create_hash(struct hash* elem)
@@ -566,6 +585,84 @@ void hash_command_insert(struct hash hashs[10])
   new->data = data;
 
   hash_insert(curr,&(new->point));
+}
+
+void hash_command_apply(struct hash hashs[10])
+{
+  char *name;
+  struct hash *curr;
+  int idx;
+
+  name = strtok(NULL, " ");
+  idx = name[4] - '0';
+  curr = &hashs[idx];
+
+  name = strtok(NULL, " ");
+  if(!strcmp(name,"square"))
+    hash_apply(curr,hash_action_square);
+  else if(!strcmp(name, "triple"))
+    hash_apply(curr,hash_action_triple);
+}
+
+void hash_command_empty(struct hash hashs[10])
+{
+  char *name;
+  struct hash *curr;
+  int idx;
+ 
+  name = strtok(NULL, " ");
+  idx = name[4] - '0';
+  curr = &hashs[idx];
+
+  if(hash_empty(curr))
+    printf("true\n");
+  else
+    printf("false\n");
+}
+
+void hash_command_size(struct hash hashs[10])
+{
+  char *name;
+  struct hash *curr;
+  int idx;
+
+  name = strtok(NULL," ");
+  idx = name[4] - '0';
+  curr = &hashs[idx];
+  printf("%d\n",hash_size(curr));
+}
+
+void hash_command_clear(struct hash hashs[10])
+{
+  char *name;
+  struct hash *curr;
+  int idx;
+
+  name = strtok(NULL, " ");
+  idx = name[4] - '0';
+  curr = &hashs[idx];
+
+  hash_clear(curr, hash_action_destruct);
+}
+
+void hash_command_find(struct hash hashs[10])
+{
+  char *name;
+  struct hash *curr;
+  struct hash_elem_body tmp;
+  struct hash_elem* find;
+  int data_find, idx;
+
+  name = strtok(NULL," ");
+  idx = name[4] - '0';
+  curr = &hashs[idx];
+
+  data_find = atoi(strtok(NULL, " "));
+  tmp.data = data_find;
+  find = hash_find(curr,&(tmp.point));
+  if(find){
+      printf("%d\n",hash_entry(find, struct hash_elem_body, point)->data);
+  }
 }
 
 void test_bitmap()

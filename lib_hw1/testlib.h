@@ -24,9 +24,6 @@ const char* basic_command[] = {
 };
 
 /*
- * insert
- * apply
- * delete
  * empty
  * size
  * clear
@@ -69,6 +66,11 @@ void create_hash(struct hash* elem);
 void dumpdata_hash(struct hash hashs[10]);
 void delete_hash(struct hash hashs[10]);
 void hash_command_insert(struct hash hashs[10]);
+void hash_command_apply(struct hash hashs[10]);
+void hash_command_empty(struct hash hashs[10]);
+void hash_command_size(struct hash hashs[10]);
+void hash_command_clear(struct hash hashs[10]);
+void hash_command_find(struct hash hashs[10]);
 void hash_action_destruct(struct hash_elem *e, void *aux);
 void hash_action_square(struct hash_elem *e, void *aux);
 void hash_action_triple(struct hash_elem *e, void *aux);
