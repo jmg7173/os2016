@@ -491,6 +491,8 @@ void test_hash()
 	hash_command_clear(hashs);
       else if(!strcmp(command,"hash_find"))
 	hash_command_find(hashs);
+      else if(!strcmp(command,"hash_replace"))
+	hash_command_replace(hashs);
       else if(!strcmp(command,"quit"))
 	break;
   }
@@ -662,6 +664,29 @@ void hash_command_find(struct hash hashs[10])
   find = hash_find(curr,&(tmp.point));
   if(find){
       printf("%d\n",hash_entry(find, struct hash_elem_body, point)->data);
+  }
+}
+
+void hash_command_replace(struct hash hashs[10])
+{
+  char *name;
+  struct hash *curr;
+  struct hash_elem *old_elem;
+  struct hash_elem_body *new = 
+    (struct hash_elem_body*)malloc(sizeof(struct hash_elem_body));
+  struct hash_elem_body *old;
+  int idx, data;
+
+  name = strtok(NULL, " ");
+  idx = name[4] - '0';
+  curr = &hashs[idx];
+
+  data = atoi(strtok(NULL, " "));
+  new->data = data;
+  old_elem = hash_replace(curr,&(new->point));
+  if(old_elem){
+      old = hash_entry(old_elem, struct hash_elem_body, point);
+      free(old);
   }
 }
 

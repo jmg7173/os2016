@@ -23,14 +23,6 @@ const char* basic_command[] = {
     "quit"
 };
 
-/*
- * empty
- * size
- * clear
- * find
- * replace
- */
-
 void test_list();
 void test_hash();
 void test_bitmap();
@@ -71,6 +63,7 @@ void hash_command_empty(struct hash hashs[10]);
 void hash_command_size(struct hash hashs[10]);
 void hash_command_clear(struct hash hashs[10]);
 void hash_command_find(struct hash hashs[10]);
+void hash_command_replace(struct hash hashs[10]);
 void hash_action_destruct(struct hash_elem *e, void *aux);
 void hash_action_square(struct hash_elem *e, void *aux);
 void hash_action_triple(struct hash_elem *e, void *aux);
