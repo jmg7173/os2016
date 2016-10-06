@@ -95,4 +95,9 @@ void bitmap_command_none(struct bitmap **bitmaps);
 void bitmap_command_reset(struct bitmap **bitmaps);
 void bitmap_command_scan(struct bitmap **bitmaps);
 void bitmap_command_scan_and_flip(struct bitmap **bitmaps);
+void bitmap_command_set(struct bitmap **bitmaps);
+void bitmap_command_set_multiple(struct bitmap **bitmaps);
+void bitmap_command_size(struct bitmap **bitmaps);
+void bitmap_command_test(struct bitmap **bitmaps);
+
 #endif

@@ -801,6 +801,14 @@ test_bitmap()
 	bitmap_command_scan(bitmaps);
       else if(!strcmp(command,"bitmap_scan_and_flip"))
 	bitmap_command_scan_and_flip(bitmaps);
+      else if(!strcmp(command,"bitmap_set"))
+	bitmap_command_set(bitmaps);
+      else if(!strcmp(command,"bitmap_set_multiple"))
+	bitmap_command_set_multiple(bitmaps);
+      else if(!strcmp(command,"bitmap_size"))
+	bitmap_command_size(bitmaps);
+      else if(!strcmp(command,"bitmap_test"))
+	bitmap_command_test(bitmaps);
       else if(!strcmp(command,"quit"))
 	break;
   }
@@ -1070,4 +1078,75 @@ bitmap_command_scan_and_flip(struct bitmap **bitmaps)
     printf("%u\n",bitmap_scan_and_flip(curr,start,cnt,true));
   else if(!strcmp(name,"false"))
     printf("%u\n",bitmap_scan_and_flip(curr,start,cnt,false));
+}
+
+void
+bitmap_command_set(struct bitmap **bitmaps)
+{
+  char *name;
+  int idx, bm_idx;
+  struct bitmap *curr;
+  name = strtok(NULL, " ");
+  idx = name[2] - '0';
+  curr = bitmaps[idx];
+
+  bm_idx = atoi(strtok(NULL, " "));
+  name = strtok(NULL, " ");
+  if(!strcmp(name,"true"))
+    bitmap_set(curr, bm_idx, true);
+  else if(!strcmp(name,"false"))
+    bitmap_set(curr,bm_idx, false);
+}
+
+void
+bitmap_command_set_multiple(struct bitmap **bitmaps)
+{
+  char *name;
+  int idx, start, cnt;
+  struct bitmap *curr;
+  
+  name = strtok(NULL, " ");
+  idx = name[2] - '0';
+  curr = bitmaps[idx];
+  
+  start = atoi(strtok(NULL, " "));
+  cnt = atoi(strtok(NULL, " "));
+
+  name = strtok(NULL, " ");
+  if(!strcmp(name,"true"))
+    bitmap_set_multiple(curr,start,cnt,true);
+  else if(!strcmp(name,"false"))
+    bitmap_set_multiple(curr,start,cnt,false);
+}
+
+void
+bitmap_command_size(struct bitmap **bitmaps)
+{
+  char *name;
+  int idx;
+  struct bitmap *curr;
+
+  name = strtok(NULL, " ");
+  idx = name[2] - '0';
+  curr = bitmaps[idx];
+
+  printf("%u\n",bitmap_size(curr));
+}
+
+void
+bitmap_command_test(struct bitmap **bitmaps)
+{
+  char *name;
+  int idx, bm_idx;
+  struct bitmap *curr;
+
+  name = strtok(NULL, " ");
+  idx = name[2] - '0';
+  curr = bitmaps[idx];
+
+  bm_idx = atoi(strtok(NULL, " "));
+  if(bitmap_test(curr,bm_idx))
+    printf("true\n");
+  else
+    printf("false\n");
 }
