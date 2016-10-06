@@ -93,6 +93,11 @@ bool hash_less(const struct hash_elem *a,
 	       void *aux);
 
 // Function for bitmap
+void create_bitmap(struct bitmap** elem);
+void dumpdata_bitmap(struct bitmap **bitmaps);
+void delete_bitmap(struct bitmap **bitmaps);
+void bitmap_command_mark(struct bitmap **bitmaps);
+void bitmap_command_all(struct bitmap **bitmaps);
 
 
 #endif

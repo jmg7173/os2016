@@ -757,12 +757,12 @@ hash_command_delete(struct hash hashs[10])
 void
 test_bitmap()
 {
-  struct bitmap bitmaps[10];
+  struct bitmap **bitmaps = (struct bitmap**)malloc(sizeof(struct bitmap*)*10);
   char *name, *command;
   char tmp[51];
 
   name = strtok(NULL, " ");
-  create_hash(&hashs[name[4]-'0']);
+  create_bitmap(&bitmaps[name[2]-'0']);
   while(true){
       fgets(tmp,50,stdin);
       tmp[strlen(tmp)-1] = '\0';
@@ -771,15 +771,87 @@ test_bitmap()
       if(!strcmp(command,"create")){
 	  name = strtok(NULL, " ");
 	  name = strtok(NULL, " ");
-	  create_hash(&hashs[name[4]-'0']);
+	  create_bitmap(&bitmaps[name[2]-'0']);
       }
       else if(!strcmp(command,"dumpdata"))
-	dumpdata_hash(hashs);
+	dumpdata_bitmap(bitmaps);
       else if(!strcmp(command,"delete"))
-	delete_hash(hashs);
-      else if(!strcmp(command,"hash_insert"))
-	hash_command_insert(hashs);
-      else if(!strcmp(command,"hash_apply"))
-	hash_command_apply(hashs);
+	delete_bitmap(bitmaps);
+      else if(!strcmp(command,"bitmap_mark"))
+	bitmap_command_mark(bitmaps);
+      else if(!strcmp(command,"bitmap_all"))
+	bitmap_command_all(bitmaps);
+      else if(!strcmp(command,"quit"))
+	break;
   }
+}
+
+void
+create_bitmap(struct bitmap** elem)
+{
+  int size;
+  size = atoi(strtok(NULL, " "));
+  *elem = bitmap_create(size);
+}
+
+void
+dumpdata_bitmap(struct bitmap **bitmaps)
+{
+  char *name;
+  int idx;
+  struct bitmap *curr;
+  size_t i;
+
+  name = strtok(NULL, " ");
+  idx = name[2]-'0';
+  curr = bitmaps[idx];
+  for(i = 0; i < bitmap_size(curr); i++){
+      printf("%d",bitmap_test(curr,i));
+  }
+  printf("\n");
+}
+
+void
+delete_bitmap(struct bitmap **bitmaps)
+{
+  char *name;
+  int idx;
+
+  name = strtok(NULL, " ");
+  idx = name[2] - '0';
+  bitmap_destroy(bitmaps[idx]);
+}
+
+void
+bitmap_command_mark(struct bitmap **bitmaps)
+{
+  char *name;
+  int idx, bm_idx;
+  struct bitmap *curr;
+
+  name = strtok(NULL, " ");
+  idx = name[2] - '0';
+  curr = bitmaps[idx];
+  bm_idx = atoi(strtok(NULL, " "));
+  bitmap_mark(curr, bm_idx);
+}
+
+void
+bitmap_command_all(struct bitmap **bitmaps)
+{
+  char *name;
+  int idx, start, cnt;
+  struct bitmap *curr;
+
+  name = strtok(NULL, " ");
+  idx = name[2] - '0';
+  curr = bitmaps[idx];
+  
+  start = atoi(strtok(NULL, " "));
+  cnt = atoi(strtok(NULL, " "));
+
+  if(bitmap_all(curr, start, cnt))
+    printf("true\n");
+  else
+    printf("false\n");
 }
