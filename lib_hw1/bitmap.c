@@ -374,7 +374,21 @@ bitmap_dump (const struct bitmap *b)
   hex_dump (0, b->bits, byte_cnt (b->bit_cnt), false);
 }
 
-struct 
-bitmap* bitmap_expand(struct bitmap* bitmap, int size)
+struct bitmap*
+bitmap_expand(struct bitmap* bitmap, int size)
 {
+  if(bitmap != NULL)
+    {
+      size_t old_cnt = bitmap->bit_cnt;
+      bitmap->bit_cnt += size;
+      free(bitmap->bits);
+      bitmap->bits = (elem_type*)malloc(byte_cnt(bitmap->bit_cnt));
+      if(bitmap->bits != NULL || size == 0)
+	{
+	  bitmap_set_multiple(bitmap, old_cnt, size, false);
+	  return bitmap;
+	}
+      free(bitmap);
+    }
+  return NULL;
 }

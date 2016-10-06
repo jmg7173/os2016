@@ -785,6 +785,12 @@ test_bitmap()
 	bitmap_command_any(bitmaps);
       else if(!strcmp(command,"bitmap_contains"))
 	bitmap_command_contains(bitmaps);
+      else if(!strcmp(command,"bitmap_count"))
+	bitmap_command_count(bitmaps);
+      else if(!strcmp(command,"bitmap_expand"))
+	bitmap_command_expand(bitmaps);
+      else if(!strcmp(command,"bitmap_set_all"))
+	bitmap_command_set_all(bitmaps);
       else if(!strcmp(command,"quit"))
 	break;
   }
@@ -908,4 +914,61 @@ bitmap_command_contains(struct bitmap **bitmaps)
       else
 	printf("false\n");
   }
+}
+
+void
+bitmap_command_count(struct bitmap **bitmaps)
+{
+  char *name;
+  int idx, start, cnt;
+  struct bitmap *curr;
+
+  name = strtok(NULL, " ");
+  idx = name[2] - '0';
+  curr = bitmaps[idx];
+
+  start = atoi(strtok(NULL, " "));
+  cnt = atoi(strtok(NULL, " "));
+
+  name = strtok(NULL, " ");
+  
+  if(!strcmp(name,"true")){
+      printf("%d\n",bitmap_count(curr,start,cnt,true));
+  }
+  else if(!strcmp(name, "false")){
+      printf("%d\n",bitmap_count(curr,start,cnt,false));
+  }
+}
+
+void
+bitmap_command_expand(struct bitmap **bitmaps)
+{
+  char *name;
+  int idx, size_up;
+  struct bitmap *curr;
+
+  name = strtok(NULL, " ");
+  idx = name[2] - '0';
+  curr = bitmaps[idx];
+
+  size_up = atoi(strtok(NULL, " "));
+  curr = bitmap_expand(curr, size_up);
+}
+
+void
+bitmap_command_set_all(struct bitmap **bitmaps)
+{
+  char *name;
+  int idx;
+  struct bitmap *curr;
+
+  name = strtok(NULL, " ");
+  idx = name[2] - '0';
+  curr = bitmaps[idx];
+
+  name = strtok(NULL, " ");
+  if(!strcmp(name,"true"))
+    bitmap_set_all(curr,true);
+  else
+    bitmap_set_all(curr,false);
 }

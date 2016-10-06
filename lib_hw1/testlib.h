@@ -24,7 +24,6 @@ const char* basic_command[] = {
 };
 
 /*
- * contains
  * count
  * expand
  * set_all
@@ -97,5 +96,7 @@ void bitmap_command_mark(struct bitmap **bitmaps);
 void bitmap_command_all(struct bitmap **bitmaps);
 void bitmap_command_any(struct bitmap **bitmaps);
 void bitmap_command_contains(struct bitmap **bitmaps);
-
+void bitmap_command_count(struct bitmap **bitmaps);
+void bitmap_command_expand(struct bitmap **bitmaps);
+void bitmap_command_set_all(struct bitmap **bitmaps);
 #endif
