@@ -24,8 +24,6 @@ const char* basic_command[] = {
 };
 
 /*
- * scan
- * scan_and_flip
  * set
  * set_multiple
  * size
@@ -95,4 +93,6 @@ void bitmap_command_set_all(struct bitmap **bitmaps);
 void bitmap_command_flip(struct bitmap **bitmaps);
 void bitmap_command_none(struct bitmap **bitmaps);
 void bitmap_command_reset(struct bitmap **bitmaps);
+void bitmap_command_scan(struct bitmap **bitmaps);
+void bitmap_command_scan_and_flip(struct bitmap **bitmaps);
 #endif

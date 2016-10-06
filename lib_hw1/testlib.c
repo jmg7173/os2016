@@ -797,6 +797,10 @@ test_bitmap()
 	bitmap_command_flip(bitmaps);
       else if(!strcmp(command,"bitmap_reset"))
 	bitmap_command_reset(bitmaps);
+      else if(!strcmp(command,"bitmap_scan"))
+	bitmap_command_scan(bitmaps);
+      else if(!strcmp(command,"bitmap_scan_and_flip"))
+	bitmap_command_scan_and_flip(bitmaps);
       else if(!strcmp(command,"quit"))
 	break;
   }
@@ -1026,4 +1030,44 @@ bitmap_command_reset(struct bitmap **bitmaps)
 
   bm_idx = atoi(strtok(NULL, " "));
   bitmap_reset(curr,bm_idx);
+}
+
+void
+bitmap_command_scan(struct bitmap **bitmaps)
+{
+  char *name;
+  int idx, start, cnt;
+  struct bitmap *curr;
+
+  name = strtok(NULL, " ");
+  idx = name[2] - '0';
+  curr = bitmaps[idx];
+
+  start = atoi(strtok(NULL, " "));
+  cnt = atoi(strtok(NULL, " "));
+  name = strtok(NULL, " ");
+  if(!strcmp(name,"true"))
+    printf("%u\n",bitmap_scan(curr,start,cnt,true));
+  else if(!strcmp(name,"false"))
+    printf("%u\n",bitmap_scan(curr,start,cnt,false));
+}
+
+void
+bitmap_command_scan_and_flip(struct bitmap **bitmaps)
+{
+  char *name;
+  int idx, start, cnt;
+  struct bitmap *curr;
+
+  name = strtok(NULL, " ");
+  idx = name[2] - '0';
+  curr = bitmaps[idx];
+
+  start = atoi(strtok(NULL, " "));
+  cnt = atoi(strtok(NULL, " "));
+  name = strtok(NULL, " ");
+  if(!strcmp(name,"true"))
+    printf("%u\n",bitmap_scan_and_flip(curr,start,cnt,true));
+  else if(!strcmp(name,"false"))
+    printf("%u\n",bitmap_scan_and_flip(curr,start,cnt,false));
 }
