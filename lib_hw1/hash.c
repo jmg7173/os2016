@@ -302,7 +302,7 @@ hash_int (int i)
 {
   return hash_bytes (&i, sizeof i);
 }
-
+
 /* Returns the bucket in H that E belongs in. */
 static struct list *
 find_bucket (struct hash *h, struct hash_elem *e) 
@@ -430,3 +430,8 @@ remove_elem (struct hash *h, struct hash_elem *e)
   list_remove (&e->list_elem);
 }
 
+unsigned
+hash_int_2 (int i)
+{
+
+}
