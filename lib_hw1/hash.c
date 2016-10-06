@@ -430,8 +430,17 @@ remove_elem (struct hash *h, struct hash_elem *e)
   list_remove (&e->list_elem);
 }
 
+// Hash function from : gist.github.com/badboy/6267743oid
+#define ROT32(x, y) ((x << y) | (x >> (32 - y)))
+#define ROTinv32(x, y) ((x >> y) | (x << (32-y)))
 unsigned
 hash_int_2 (int i)
 {
-
+  i = ~i + (i << 15); // key = (key << 15) - key - 1;
+  i = i ^ (ROTinv32(i,12));
+  i = i + (i << 2);
+  i = i ^ (ROTinv32(i,4));
+  i = i * 2057; // key = (key + (key << 3)) + (key << 11);
+  i = i ^ (ROTinv32(i,16));
+  return i;
 }
