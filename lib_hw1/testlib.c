@@ -783,6 +783,8 @@ test_bitmap()
 	bitmap_command_all(bitmaps);
       else if(!strcmp(command,"bitmap_any"))
 	bitmap_command_any(bitmaps);
+      else if(!strcmp(command,"bitmap_contains"))
+	bitmap_command_contains(bitmaps);
       else if(!strcmp(command,"quit"))
 	break;
   }
@@ -876,4 +878,34 @@ bitmap_command_any(struct bitmap **bitmaps)
     printf("true\n");
   else
     printf("false\n");
+}
+
+void
+bitmap_command_contains(struct bitmap **bitmaps)
+{
+  char *name;
+  int idx, start, cnt;
+  struct bitmap *curr;
+
+  name = strtok(NULL, " ");
+  idx = name[2] - '0';
+  curr = bitmaps[idx];
+
+  start = atoi(strtok(NULL, " "));
+  cnt = atoi(strtok(NULL, " "));
+
+  name = strtok(NULL, " ");
+  
+  if(!strcmp(name,"true")){
+      if(bitmap_contains(curr, start, cnt, true))
+	printf("true\n");
+      else
+	printf("false\n");
+  }
+  else if(!strcmp(name, "false")){
+      if(bitmap_contains(curr, start, cnt, false))
+	printf("true\n");
+      else
+	printf("false\n");
+  }
 }
