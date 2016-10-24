@@ -20,6 +20,7 @@
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
+static void execute_thread(const char *file_name);
 
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
@@ -41,9 +42,26 @@ process_execute (const char *file_name)
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
-    palloc_free_page (fn_copy); 
+    palloc_free_page (fn_copy);
+  // TODO, XXX : Added by me. Make execute_thread function
+  /*else
+    execute_thread(file_name);*/
   return tid;
 }
+
+// XXX : Added my me. Where do I make void pointer for esp??
+// Pass esp at load to setup stack.
+// TODO : Complete function.
+/*
+void
+execute_thread(const char *file_name)
+{
+  // TODO : How can I pass eip and esp?
+  load(file_name, , );
+  
+  // What is it?
+  start_user_process;
+}*/
 
 /* A thread function that loads a user process and starts it
    running. */
@@ -85,9 +103,11 @@ start_process (void *file_name_)
 
    This function will be implemented in problem 2-2.  For now, it
    does nothing. */
+// TODO : change it to infinite loop
 int
 process_wait (tid_t child_tid UNUSED) 
 {
+  while(true);
   return -1;
 }
 
@@ -315,7 +335,6 @@ load (const char *file_name, void (**eip) (void), void **esp)
   file_close (file);
   return success;
 }
-
 /* load() helpers. */
 
 static bool install_page (void *upage, void *kpage, bool writable);
