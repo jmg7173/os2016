@@ -14,6 +14,7 @@
 #include "threads/flags.h"
 #include "threads/init.h"
 #include "threads/interrupt.h"
+#include "threads/malloc.h"
 #include "threads/palloc.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
@@ -41,7 +42,6 @@ process_execute (const char *file_name)
 
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
-  
   /* If thread create has error, free allocated page */
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy);
@@ -225,7 +225,10 @@ load (const char *file_name, void (**eip) (void), void **esp)
   struct file *file = NULL;
   off_t file_ofset;
   bool success = false;
-  int i;
+  int i, argc = 0;
+  char *save_ptr;
+  char *arg_tmp, *token;
+  char **args;
 
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create ();
@@ -233,11 +236,27 @@ load (const char *file_name, void (**eip) (void), void **esp)
     goto done;
   process_activate ();
 
+  /* Parse file_name */
+  arg_tmp = malloc (strlen(file_name)); 
+  memcpy(arg_tmp,file_name,strlen(file_name));
+
+  for (token = strtok_r(arg_tmp, " ", &save_ptr); token != NULL;
+       token = strtok_r(NULL, " ", &save_ptr), argc++);
+
+  args = malloc(argc * sizeof(int*));
+  memcpy(arg_tmp,file_name,strlen(file_name));
+  for (i = 0,token = strtok_r(arg_tmp, " ", &save_ptr); token != NULL;
+       token = strtok_r(NULL, " ", &save_ptr), i++)
+    {
+      args[i] = token;
+    }
+
+  /* extracted file_name by strtok_r */
   /* Open executable file. */
-  file = filesys_open (file_name);
+  file = filesys_open (args[0]);
   if (file == NULL) 
     {
-      printf ("load: %s: open failed\n", file_name);
+      printf ("load: %s: open failed\n", args[0]);
       goto done; 
     }
 
@@ -250,7 +269,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
       || ehdr.e_phentsize != sizeof (struct Elf32_Phdr)
       || ehdr.e_phnum > 1024) 
     {
-      printf ("load: %s: error loading executable\n", file_name);
+      printf ("load: %s: error loading executable\n", args[0]);
       goto done; 
     }
 
@@ -318,6 +337,8 @@ load (const char *file_name, void (**eip) (void), void **esp)
   if (!setup_stack (esp))
     goto done;
 
+  // TODO : Construct ESP in here
+  
   /* Start address. */
   *eip = (void (*) (void)) ehdr.e_entry;
 
