@@ -41,27 +41,18 @@ process_execute (const char *file_name)
 
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+  
+  /* If thread create has error, free allocated page */
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy);
-  // TODO, XXX : Added by me. Make execute_thread function
+  // XXX : I think I should use start_process function.
+  // It invokes load! LoL!
+  else
+    start_process(file_name);
   /*else
     execute_thread(file_name);*/
   return tid;
 }
-
-// XXX : Added my me. Where do I make void pointer for esp??
-// Pass esp at load to setup stack.
-// TODO : Complete function.
-/*
-void
-execute_thread(const char *file_name)
-{
-  // TODO : How can I pass eip and esp?
-  load(file_name, , );
-  
-  // What is it?
-  start_user_process;
-}*/
 
 /* A thread function that loads a user process and starts it
    running. */
@@ -221,6 +212,7 @@ static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
                           uint32_t read_bytes, uint32_t zero_bytes,
                           bool writable);
 
+// TODO : Maybe implement parse filename and construct esp
 /* Loads an ELF executable from FILE_NAME into the current thread.
    Stores the executable's entry point into *EIP
    and its initial stack pointer into *ESP.
@@ -262,6 +254,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
       goto done; 
     }
 
+  // XXX : Maybe in here, it load ELF executable
   /* Read program headers. */
   file_ofset = ehdr.e_phoff;
   for (i = 0; i < ehdr.e_phnum; i++) 
