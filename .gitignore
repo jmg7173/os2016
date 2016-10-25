@@ -1,5 +1,6 @@
 *.o
 *.out
 *.swp
+*.nfs*
 testlib
 filesys.dsk
