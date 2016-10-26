@@ -210,7 +210,6 @@ static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
                           uint32_t read_bytes, uint32_t zero_bytes,
                           bool writable);
 
-// TODO : Maybe implement parse filename and construct esp
 /* Loads an ELF executable from FILE_NAME into the current thread.
    Stores the executable's entry point into *EIP
    and its initial stack pointer into *ESP.
@@ -252,13 +251,11 @@ load (const char *file_name, void (**eip) (void), void **esp)
   for (i = 0,token = strtok_r(arg_tmp, " ", &save_ptr); token != NULL;
        token = strtok_r(NULL, " ", &save_ptr), i++)
     {
-      //args[i] = malloc(strlen(token+1)*sizeof(char));
       args[i] = calloc(strlen(token)+1, sizeof(char));
       memcpy(args[i],token,strlen(token));
     }
   free(arg_tmp);
 
-  /* extracted file_name by strtok_r */
   /* Open executable file. */
   file = filesys_open (args[0]);
   if (file == NULL) 
@@ -344,8 +341,6 @@ load (const char *file_name, void (**eip) (void), void **esp)
   if (!setup_stack (esp))
     goto done;
 
-  // TODO : Construct ESP in here
-  
   /* Construct ESP for args */
   for(i = argc-1; i>=0; i--)
     {
