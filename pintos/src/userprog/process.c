@@ -21,7 +21,6 @@
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
-static void execute_thread(const char *file_name);
 
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
@@ -45,10 +44,10 @@ process_execute (const char *file_name)
   /* If thread create has error, free allocated page */
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy);
+  
   // XXX : I think I should use start_process function.
-  // It invokes load! LoL!
   else
-    start_process(file_name);
+    start_process((void*)file_name);
   /*else
     execute_thread(file_name);*/
   return tid;
@@ -71,7 +70,6 @@ start_process (void *file_name_)
   success = load (file_name, &if_.eip, &if_.esp);
 
   /* If load failed, quit. */
-  palloc_free_page (file_name);
   if (!success) 
     thread_exit ();
 
@@ -226,6 +224,10 @@ load (const char *file_name, void (**eip) (void), void **esp)
   off_t file_ofset;
   bool success = false;
   int i, argc = 0;
+  size_t dump_size = 0;
+  unsigned int *args_addr = NULL;
+  unsigned int addr_tmp;
+  uint8_t word_align = 0;
   char *save_ptr;
   char *arg_tmp, *token;
   char **args;
@@ -237,19 +239,24 @@ load (const char *file_name, void (**eip) (void), void **esp)
   process_activate ();
 
   /* Parse file_name */
-  arg_tmp = malloc (strlen(file_name)); 
+  arg_tmp = malloc (strlen(file_name+1)); 
   memcpy(arg_tmp,file_name,strlen(file_name));
-
+  arg_tmp[strlen(file_name)] = '\0';
   for (token = strtok_r(arg_tmp, " ", &save_ptr); token != NULL;
-       token = strtok_r(NULL, " ", &save_ptr), argc++);
+       argc++,token = strtok_r(NULL, " ", &save_ptr));
 
-  args = malloc(argc * sizeof(int*));
+  args = malloc (argc * sizeof(char*));
+  args_addr = malloc((argc+1) * sizeof(unsigned int));
   memcpy(arg_tmp,file_name,strlen(file_name));
+
   for (i = 0,token = strtok_r(arg_tmp, " ", &save_ptr); token != NULL;
        token = strtok_r(NULL, " ", &save_ptr), i++)
     {
-      args[i] = token;
+      //args[i] = malloc(strlen(token+1)*sizeof(char));
+      args[i] = calloc(strlen(token)+1, sizeof(char));
+      memcpy(args[i],token,strlen(token));
     }
+  free(arg_tmp);
 
   /* extracted file_name by strtok_r */
   /* Open executable file. */
@@ -273,7 +280,6 @@ load (const char *file_name, void (**eip) (void), void **esp)
       goto done; 
     }
 
-  // XXX : Maybe in here, it load ELF executable
   /* Read program headers. */
   file_ofset = ehdr.e_phoff;
   for (i = 0; i < ehdr.e_phnum; i++) 
@@ -301,7 +307,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
         case PT_SHLIB:
           goto done;
         case PT_LOAD:
-          if (validate_segment (&phdr, file)) 
+	  if (validate_segment (&phdr, file)) 
             {
               bool writable = (phdr.p_flags & PF_W) != 0;
               uint32_t file_page = phdr.p_offset & ~PGMASK;
@@ -334,11 +340,60 @@ load (const char *file_name, void (**eip) (void), void **esp)
     }
 
   /* Set up stack. */
+  printf("I'm starting stack!!!LoL!\n");
   if (!setup_stack (esp))
     goto done;
 
   // TODO : Construct ESP in here
   
+  /* Construct ESP for args */
+  for(i = argc-1; i>=0; i--)
+    {
+      unsigned int len = strlen(args[i]) + 1;
+      *esp = *esp - len;
+      args_addr[i] = (unsigned int)*esp;
+      memcpy(*esp,args[i],len);
+      dump_size += len;
+    }
+
+  /* Construct ESP for word-align */
+  *esp = *esp - 1;
+  memcpy(*esp,&word_align,sizeof(uint8_t));
+  dump_size += 1;
+  /* Construct ESP for stack pointer */
+  
+  /* args[argc] (0) */
+  addr_tmp = 0;
+  *esp = *esp - sizeof(unsigned int);
+  memcpy(*esp, &addr_tmp, sizeof(unsigned int));
+  dump_size += sizeof(unsigned int);
+
+  /* args[i] (stack pointer) */
+  for(i = argc-1; i>=0; i--)
+    {
+      *esp = *esp - sizeof(unsigned int);
+      memcpy(*esp,&(args_addr[i]),sizeof(unsigned int));
+      dump_size += sizeof(unsigned int);
+    }
+  
+  /* Construct ESP for args start pointer */
+  addr_tmp = (unsigned int)*esp;
+  *esp = *esp - sizeof(unsigned int);
+  memcpy(*esp, &addr_tmp, sizeof(unsigned int));
+  dump_size += sizeof(unsigned int);
+
+  /* Construct ESP for argc */
+  *esp = *esp - sizeof(int);
+  memcpy(*esp, &argc, sizeof(int));
+  dump_size += sizeof(int);
+
+  /* Construct ESP for fake return address */
+  i = 0;
+  *esp = *esp - sizeof(int);
+  memcpy(*esp, &i, sizeof(int));
+  dump_size += sizeof(int);
+
+  hex_dump(*esp,*esp,dump_size,true);
   /* Start address. */
   *eip = (void (*) (void)) ehdr.e_entry;
 
@@ -346,6 +401,16 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
  done:
   /* We arrive here whether the load is successful or not. */
+
+  /* Free allocated memory */
+  if(args_addr)
+    {
+      free(args_addr);
+      for(i = 0; i<argc; i++)
+	free(args[i]);
+      free(args);
+    }
+
   file_close (file);
   return success;
 }
