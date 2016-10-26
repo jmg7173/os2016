@@ -45,11 +45,6 @@ process_execute (const char *file_name)
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy);
   
-  // XXX : I think I should use start_process function.
-  else
-    start_process((void*)file_name);
-  /*else
-    execute_thread(file_name);*/
   return tid;
 }
 
@@ -73,6 +68,7 @@ start_process (void *file_name_)
   if (!success) 
     thread_exit ();
 
+  palloc_free_page(file_name);
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its
@@ -95,8 +91,14 @@ start_process (void *file_name_)
 // TODO : change it to infinite loop
 int
 process_wait (tid_t child_tid UNUSED) 
-{
-  while(true);
+{ 
+  int i, j = 0;
+  while(true) 
+    {
+      j = (i+1)/2;
+      i++;
+      if(i > 500000000) break;
+    }
   return -1;
 }
 
@@ -337,7 +339,6 @@ load (const char *file_name, void (**eip) (void), void **esp)
     }
 
   /* Set up stack. */
-  printf("I'm starting stack!!!LoL!\n");
   if (!setup_stack (esp))
     goto done;
 
@@ -389,6 +390,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
   dump_size += sizeof(int);
 
   hex_dump(*esp,*esp,dump_size,true);
+  printf("\n");
   /* Start address. */
   *eip = (void (*) (void)) ehdr.e_entry;
 
