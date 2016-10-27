@@ -29,7 +29,7 @@ syscall_handler (struct intr_frame *f)
   // Interrupt vector no is known as 0x30
   if(!f->esp || !is_user_vaddr(f->esp) || f->esp < (void*)0x0)
     usercall_exit(-1);
-//  hex_dump(f->esp,f->esp,212,true);
+  //hex_dump(f->esp,f->esp,212,true);
   syscallnum = *(int*)f->esp;
   switch(syscallnum)
     {
@@ -57,6 +57,14 @@ syscall_handler (struct intr_frame *f)
     case SYS_FILESIZE:
       break;
     case SYS_READ:
+      if(!is_user_vaddr(f->esp+4) ||
+	 !is_user_vaddr(f->esp+8) ||
+	 !is_user_vaddr(f->esp+12))
+	usercall_exit(-1);
+      f->eax = usercall_read(*(int*)(f->esp+4),
+			     *(void**)(f->esp+8),
+			     *(unsigned*)(f->esp+12));
+
       break;
     case SYS_WRITE:
       if(!is_user_vaddr(f->esp+4) ||
@@ -66,6 +74,23 @@ syscall_handler (struct intr_frame *f)
       f->eax = usercall_write(*(int*)(f->esp+4),
 			      *(const void**)(f->esp+8),
 			      *(unsigned*)(f->esp+12));
+      break;
+      /* Newly defined system call */
+    case SYS_FIBO:
+      if(!is_user_vaddr(f->esp+4))
+	usercall_exit(-1);
+      f->eax = usercall_pibo(*(int*)(f->esp+4));
+      break;
+    case SYS_SUM4:
+      if(!is_user_vaddr(f->esp+4) ||
+	 !is_user_vaddr(f->esp+8) ||
+	 !is_user_vaddr(f->esp+12)||
+	 !is_user_vaddr(f->esp+16))
+	usercall_exit(-1);
+      f->eax = usercall_sum4(*(int*)(f->esp+4),
+			      *(int*)(f->esp+8),
+			      *(int*)(f->esp+12),
+			      *(int*)(f->esp+16));
       break;
       /* Not implement */
     case SYS_SEEK:
@@ -105,14 +130,18 @@ usercall_exit(int status)
 }
 
 pid_t
-usercall_exec(const char *file UNUSED)
+usercall_exec(const char *file)
 {
-  return process_execute(file);
+  tid_t child_tid = process_execute(file);
+
+  return child_tid;
 }
 
 int
 usercall_wait(pid_t pid UNUSED)
 {
+  struct thread *child;
+  return pid;
 }
 
 bool
@@ -138,6 +167,12 @@ usercall_read(int fd, void *buffer, unsigned size)
   /* For Standard Input */
   if(fd == 0)
     {
+      int i;
+      for(i = 0; i<size; i++)
+	{
+	  *((uint8_t*)buffer + i) = input_getc();
+	}
+      retval = size;
     }
   /* For Invalid fd */
   else if(fd == 1 || fd < 0)
@@ -182,4 +217,25 @@ usercall_tell(int fd UNUSED)
 void
 usercall_close(int fd UNUSED)
 {
+}
+
+int
+usercall_pibo(int n)
+{
+  int i;
+  int a = 0, b = 1, c = 0;
+  printf("in pibo(not fibo) n is %d\n",n);
+  for(i = 1; i<= n; i++)
+    {
+      a = b;
+      b = c;
+      c = a+b;
+    }
+  return c;
+}
+
+int
+usercall_sum4(int a, int b, int c, int d)
+{
+  return a+b+c+d;
 }
