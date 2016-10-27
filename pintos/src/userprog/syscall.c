@@ -23,13 +23,14 @@ syscall_init (void)
 static void
 syscall_handler (struct intr_frame *f) 
 {
-  int syscallnum = *((int*)f->esp);
+  int syscallnum;
   // XXX : How can I handle system call? make base structure.
   // use switch-case?
   // Interrupt vector no is known as 0x30
-  if(!f->esp || !is_user_vaddr(f->esp))
+  if(!f->esp || !is_user_vaddr(f->esp) || f->esp < (void*)0x0)
     usercall_exit(-1);
 //  hex_dump(f->esp,f->esp,212,true);
+  syscallnum = *(int*)f->esp;
   switch(syscallnum)
     {
       /* implement later */
