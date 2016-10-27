@@ -30,6 +30,9 @@ tid_t
 process_execute (const char *file_name) 
 {
   char *fn_copy;
+  char *str_tmp;
+  char *save_ptr;
+  char *token;
   tid_t tid;
 
   /* Make a copy of FILE_NAME.
@@ -38,9 +41,15 @@ process_execute (const char *file_name)
   if (fn_copy == NULL)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
-
+ 
+  // TODO : check for single argc. bug.
+  str_tmp = calloc(strlen(file_name)+1,sizeof(char));
+  strlcpy (str_tmp, file_name, strlen(file_name)+1);
+  token = strtok_r(str_tmp, " ", &save_ptr);
+  
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (token, PRI_DEFAULT, start_process, fn_copy);
+  
   /* If thread create has error, free allocated page */
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy);
@@ -92,6 +101,7 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 { 
+  struct thread *child;
   int i, j = 0;
   while(true) 
     {
@@ -99,6 +109,15 @@ process_wait (tid_t child_tid UNUSED)
       i++;
       if(i > 500000000) break;
     }
+  // child->status = THREAD_DYING;
+  /* We can know that gotten thread's elem is 
+   * thread or semaphore by is_thread function.
+   * elem is semaphore or thread cause it is mutually exclusive.
+   * if thread is run queue, elem's body is thread.
+   * if thread is blocked state, elem's body is semaphore.
+   * blocked state is waiting for an event to trigger.
+   * How can we know that thread has finished its job?
+   */
   return -1;
 }
 
@@ -389,8 +408,8 @@ load (const char *file_name, void (**eip) (void), void **esp)
   memcpy(*esp, &i, sizeof(int));
   dump_size += sizeof(int);
 
-  hex_dump(*esp,*esp,dump_size,true);
-  printf("\n");
+  //hex_dump(*esp,*esp,dump_size,true);
+  //printf("\n");
   /* Start address. */
   *eip = (void (*) (void)) ehdr.e_entry;
 

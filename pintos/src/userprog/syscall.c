@@ -4,6 +4,7 @@
 #include <console.h>
 #include "threads/interrupt.h"
 #include "threads/thread.h"
+#include "threads/vaddr.h"
 #include "devices/input.h"
 #include "devices/shutdown.h"
 
@@ -28,8 +29,7 @@ syscall_handler (struct intr_frame *f)
   // Interrupt vector no is known as 0x30
   if(!f->esp || !is_user_vaddr(f->esp))
     usercall_exit(-1);
-  printf("system calling! syscall num : %d\n",syscallnum);
-  hex_dump(f->esp,f->esp,212,true);
+//  hex_dump(f->esp,f->esp,212,true);
   switch(syscallnum)
     {
       /* implement later */
@@ -38,9 +38,14 @@ syscall_handler (struct intr_frame *f)
       usercall_halt();
       break;
     case SYS_EXIT:
+      if(!is_user_vaddr(f->esp+4))
+	usercall_exit(-1);
       usercall_exit(*(int*)(f->esp+4));
       break;
     case SYS_EXEC:
+      if(!is_user_vaddr(f->esp+4))
+	usercall_exit(-1);
+      usercall_exec(*(const char**)(f->esp+4));
       break;
     case SYS_WAIT:
       break;
@@ -53,6 +58,10 @@ syscall_handler (struct intr_frame *f)
     case SYS_READ:
       break;
     case SYS_WRITE:
+      if(!is_user_vaddr(f->esp+4) ||
+	 !is_user_vaddr(f->esp+8) ||
+	 !is_user_vaddr(f->esp+12))
+	usercall_exit(-1);
       f->eax = usercall_write(*(int*)(f->esp+4),
 			      *(const void**)(f->esp+8),
 			      *(unsigned*)(f->esp+12));
@@ -76,7 +85,6 @@ syscall_handler (struct intr_frame *f)
     
 
     }
-  thread_exit ();
 }
 
 void
@@ -85,15 +93,20 @@ usercall_halt(void)
   shutdown_power_off();
 }
 
+// TODO : detach thread from thread list
 void
-usercall_exit(int status UNUSED)
+usercall_exit(int status)
 {
-  printf("exit(%d)\n",status);
+  struct thread *curr = thread_current();
+  
+  printf("%s: exit(%d)\n",curr->name,status);
+  thread_exit();
 }
 
 pid_t
 usercall_exec(const char *file UNUSED)
 {
+  return process_execute(file);
 }
 
 int
@@ -116,21 +129,42 @@ usercall_filesize(int fd UNUSED)
 {
 }
 
+// TODO
 int
 usercall_read(int fd, void *buffer, unsigned size)
 {
+  int retval = -1;
+  /* For Standard Input */
   if(fd == 0)
     {
     }
+  /* For Invalid fd */
+  else if(fd == 1 || fd < 0)
+    usercall_exit(-1);
+  /* For general file read */
+  else
+    {
+    }
+  return retval;
 }
 
 int
 usercall_write(int fd, const void *buffer, unsigned size)
 {
-  if(fd == 1)
+  int retval = -1;
+  /* For Invalid fd */
+  if(fd <= 0)
+    usercall_exit(-1);
+  /* For Standard Output */
+  else if(fd == 1)
     {
       putbuf(buffer, size);
+      retval = size;
       return size;
+    }
+  /* For general file write */
+  else
+    {
     }
 }
 
