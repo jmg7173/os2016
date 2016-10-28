@@ -17,7 +17,4 @@ int usercall_write(int fd, const void *buffer, unsigned size);
 void usercall_seek(int fd, unsigned position);
 unsigned usercall_tell(int fd);
 void usercall_close(int fd);
-int usercall_pibo(int n);
-int usercall_sum4(int a, int b, int c, int d);
-
 #endif /* userprog/syscall.h */
