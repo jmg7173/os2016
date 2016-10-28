@@ -69,10 +69,10 @@ process_execute (const char *file_name)
       struct thread *tmp = 
 	list_entry(e,struct thread, child_elem);
       /* if child->tid == tid, run child thread */
-      if(child->tid == tid)
+      if(tmp->tid == tid)
 	{
-	  sema_up(&child->sema);
-	  child->wait_exec = false;
+	  sema_up(&tmp->sema);
+	  tmp->wait_exec = false;
 	  return tid;
 	}
     }
@@ -146,7 +146,7 @@ process_wait (tid_t child_tid)
       e  = list_next(e))
     {
       child = list_entry(e,struct thread, child_elem);
-      if(child->tid == tid)
+      if(child->tid == child_tid)
 	break;
       child = NULL;
     }
