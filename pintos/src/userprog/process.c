@@ -29,6 +29,8 @@ static bool load (const char *cmdline, void (**eip) (void), void **esp);
 tid_t
 process_execute (const char *file_name) 
 {
+  struct thread *parent = thread_current();
+  struct list_elem *e;
   char *fn_copy;
   char *str_tmp;
   char *save_ptr;
@@ -42,7 +44,6 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
  
-  // TODO : check for single argc. bug.
   str_tmp = calloc(strlen(file_name)+1,sizeof(char));
   strlcpy (str_tmp, file_name, strlen(file_name)+1);
   token = strtok_r(str_tmp, " ", &save_ptr);
@@ -53,8 +54,26 @@ process_execute (const char *file_name)
   /* If thread create has error, free allocated page */
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy);
-  
-  return tid;
+ 
+  /* check if load success */
+  parent->wait_load = true;
+  sema_down(&parent->sema);
+
+  for(e  = list_begin(&parent->list_child);
+      e != list_end(&parent->list_child);
+      e  = list_next(e))
+    {
+      struct thread *tmp = 
+	list_entry(e,struct thread, child_elem);
+      /* if child->tid == tid, run child thread */
+      if(child->tid == tid)
+	{
+	  sema_up(&child->sema);
+	  child->wait_exec = false;
+	  return tid;
+	}
+    }
+  return TID_ERROR;
 }
 
 /* A thread function that loads a user process and starts it
@@ -74,8 +93,21 @@ start_process (void *file_name_)
   success = load (file_name, &if_.eip, &if_.esp);
 
   /* If load failed, quit. */
-  if (!success) 
-    thread_exit ();
+  if (!success)
+    {
+      list_remove(&thread_current()->child_elem);
+      sema_up(&thread_current()->parent->sema);
+      thread_current()->parent->wait_load = false;
+      thread_exit ();
+    }
+
+  else
+    {
+      sema_up(&thread_current()->parent->sema);
+      thread_current()->parent->wait_load = false;
+      thread_current()->wait_exec = true;
+      sema_down(&thread_current()->sema);
+    }
 
   palloc_free_page(file_name);
   /* Start the user process by simulating a return from an
@@ -97,28 +129,39 @@ start_process (void *file_name_)
 
    This function will be implemented in problem 2-2.  For now, it
    does nothing. */
-// TODO : change it to infinite loop
 int
-process_wait (tid_t child_tid UNUSED) 
-{ 
-  struct thread *child;
-  int i, j = 0;
-  while(true) 
+process_wait (tid_t child_tid) 
+{
+  struct thread *parent = thread_current();
+  struct thread *child = NULL;
+  struct list_elem *e;
+  int return_status;
+
+  for(e  = list_begin(&parent->list_child);
+      e != list_end(&parent->list_child);
+      e  = list_next(e))
     {
-      j = (i+1)/2;
-      i++;
-      if(i > 500000000) break;
+      child = list_entry(e,struct thread, child_elem);
+      if(child->tid == tid)
+	break;
+      child = NULL;
     }
-  // child->status = THREAD_DYING;
-  /* We can know that gotten thread's elem is 
-   * thread or semaphore by is_thread function.
-   * elem is semaphore or thread cause it is mutually exclusive.
-   * if thread is run queue, elem's body is thread.
-   * if thread is blocked state, elem's body is semaphore.
-   * blocked state is waiting for an event to trigger.
-   * How can we know that thread has finished its job?
-   */
-  return -1;
+
+  if(!child)
+    return -1;
+
+  if(child->is_waited)
+    return -1;
+
+  child->is_waited = true;
+
+  while(child->wait_load || child->wait_exec);
+
+  sema_up(&child->sema);
+  while(!child->collect_me)
+    thread_yield();
+  return_status = child->return_status;
+  return return_status;
 }
 
 /* Free the current process's resources. */

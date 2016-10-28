@@ -299,6 +299,10 @@ thread_exit (void)
   process_exit ();
 #endif
 
+  if(thread_current()->parent)
+    {
+      thread_current()->collect_me = true;
+    }
   /* Remove thread from all threads list, set our status to dying,
      and schedule another process.  That process will destroy us
      when it calls thread_schedule_tail(). */
