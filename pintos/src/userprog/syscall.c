@@ -59,9 +59,7 @@ syscall_handler (struct intr_frame *f)
     case SYS_FILESIZE:
       break;
     case SYS_READ:
-      if(!is_user_vaddr(f->esp+4) ||
-	 !is_user_vaddr(f->esp+8) ||
-	 !is_user_vaddr(f->esp+12))
+      if(!is_user_vaddr(f->esp+12))
 	usercall_exit(-1);
       f->eax = usercall_read(*(int*)(f->esp+4),
 			     *(void**)(f->esp+8),
@@ -69,9 +67,7 @@ syscall_handler (struct intr_frame *f)
 
       break;
     case SYS_WRITE:
-      if(!is_user_vaddr(f->esp+4) ||
-	 !is_user_vaddr(f->esp+8) ||
-	 !is_user_vaddr(f->esp+12))
+      if(!is_user_vaddr(f->esp+12))
 	usercall_exit(-1);
       f->eax = usercall_write(*(int*)(f->esp+4),
 			      *(const void**)(f->esp+8),
@@ -84,10 +80,7 @@ syscall_handler (struct intr_frame *f)
       f->eax = usercall_pibo(*(int*)(f->esp+4));
       break;
     case SYS_SUM4:
-      if(!is_user_vaddr(f->esp+4) ||
-	 !is_user_vaddr(f->esp+8) ||
-	 !is_user_vaddr(f->esp+12)||
-	 !is_user_vaddr(f->esp+16))
+      if(!is_user_vaddr(f->esp+16))
 	usercall_exit(-1);
       f->eax = usercall_sum4(*(int*)(f->esp+4),
 			      *(int*)(f->esp+8),
@@ -125,7 +118,7 @@ void
 usercall_exit(int status)
 {
   struct thread *curr = thread_current();
-  // TODO : Fix it.
+  curr->wait_exec = true;
   while(!list_empty(&curr->list_child))
     {
       struct list_elem *e 
@@ -137,11 +130,16 @@ usercall_exit(int status)
   curr->return_status = status;
   printf("%s: exit(%d)\n",curr->name,status);
   
+  curr->wait_load = false;
+  curr->wait_exec = false;
+  
+  /* Wait for parent to process_wait me */
+  sema_up(&curr->parent->sema);
+  sema_down(&curr->sema);
   if(curr->parent)
     {
+      list_remove(&curr->child_elem);
       curr->collect_me = true;
-      //sema_up(&curr->parent->sema);
-      sema_down(&curr->sema);
     }
 
   thread_exit();
@@ -150,15 +148,13 @@ usercall_exit(int status)
 pid_t
 usercall_exec(const char *file)
 {
-  tid_t child_tid = process_execute(file);
-  return child_tid;
+  return process_execute(file);
 }
 
 int
-usercall_wait(pid_t pid UNUSED)
+usercall_wait(pid_t pid)
 {
-  int retval = process_wait(pid);
-  return retval;
+  return process_wait(pid);
 }
 
 int

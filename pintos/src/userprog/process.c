@@ -53,7 +53,10 @@ process_execute (const char *file_name)
   
   /* If thread create has error, free allocated page */
   if (tid == TID_ERROR)
-    palloc_free_page (fn_copy);
+    {
+      palloc_free_page (fn_copy);
+      return TID_ERROR;
+    }
  
   /* check if load success */
   parent->wait_load = true;
@@ -96,6 +99,7 @@ start_process (void *file_name_)
   if (!success)
     {
       list_remove(&thread_current()->child_elem);
+      thread_current()->return_status = -1;
       sema_up(&thread_current()->parent->sema);
       thread_current()->parent->wait_load = false;
       thread_exit ();
