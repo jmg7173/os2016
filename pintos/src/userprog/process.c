@@ -36,7 +36,6 @@ process_execute (const char *file_name)
   char *save_ptr;
   char *token;
   tid_t tid;
-
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
   fn_copy = palloc_get_page (0);
@@ -50,17 +49,14 @@ process_execute (const char *file_name)
   
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (token, PRI_DEFAULT, start_process, fn_copy);
-  
+ 
   /* If thread create has error, free allocated page */
   if (tid == TID_ERROR)
-    {
-      palloc_free_page (fn_copy);
-      return TID_ERROR;
-    }
- 
-  /* check if load success */
+    palloc_free_page (fn_copy);
+  
   parent->wait_load = true;
   sema_down(&parent->sema);
+  /* check if load success */
 
   for(e  = list_begin(&parent->list_child);
       e != list_end(&parent->list_child);
@@ -70,11 +66,7 @@ process_execute (const char *file_name)
 	list_entry(e,struct thread, child_elem);
       /* if child->tid == tid, run child thread */
       if(tmp->tid == tid)
-	{
-	  sema_up(&tmp->sema);
-	  tmp->wait_exec = false;
-	  return tid;
-	}
+	return tid;
     }
   return TID_ERROR;
 }
@@ -94,22 +86,20 @@ start_process (void *file_name_)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (file_name, &if_.eip, &if_.esp);
-
   /* If load failed, quit. */
   if (!success)
     {
       list_remove(&thread_current()->child_elem);
       thread_current()->return_status = -1;
-      sema_up(&thread_current()->parent->sema);
       thread_current()->parent->wait_load = false;
+      sema_up(&thread_current()->parent->sema);
       thread_exit ();
     }
 
   else
     {
-      sema_up(&thread_current()->parent->sema);
       thread_current()->parent->wait_load = false;
-      thread_current()->wait_exec = true;
+      sema_up(&thread_current()->parent->sema);
       sema_down(&thread_current()->sema);
     }
 
@@ -140,7 +130,6 @@ process_wait (tid_t child_tid)
   struct thread *child = NULL;
   struct list_elem *e;
   int return_status;
-
   for(e  = list_begin(&parent->list_child);
       e != list_end(&parent->list_child);
       e  = list_next(e))
@@ -160,11 +149,11 @@ process_wait (tid_t child_tid)
   child->is_waited = true;
 
   while(child->wait_load || child->wait_exec);
-
   sema_up(&child->sema);
   while(!child->collect_me)
     thread_yield();
   return_status = child->return_status;
+  sema_up(&child->sema);
   return return_status;
 }
 

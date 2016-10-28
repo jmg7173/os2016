@@ -135,13 +135,12 @@ usercall_exit(int status)
   
   /* Wait for parent to process_wait me */
   sema_up(&curr->parent->sema);
-  sema_down(&curr->sema);
   if(curr->parent)
     {
       list_remove(&curr->child_elem);
       curr->collect_me = true;
     }
-
+  sema_down(&curr->sema);
   thread_exit();
 }
 
