@@ -1,8 +1,11 @@
 #include "userprog/syscall.h"
+#include "userprog/process.h"
 #include <stdio.h>
 #include <syscall-nr.h>
 #include <console.h>
+#include <list.h>
 #include "threads/interrupt.h"
+#include "threads/synch.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
 #include "devices/input.h"
@@ -45,7 +48,7 @@ syscall_handler (struct intr_frame *f)
     case SYS_EXEC:
       if(!is_user_vaddr(f->esp+4))
 	usercall_exit(-1);
-      usercall_exec(*(const char**)(f->esp+4));
+      f->eax = usercall_exec(*(const char**)(f->esp+4));
       break;
     case SYS_WAIT:
       if(!is_user_vaddr(f->esp+4))

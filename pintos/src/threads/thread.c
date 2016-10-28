@@ -185,10 +185,6 @@ thread_create (const char *name, int priority,
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
 
-  /* Add thread at parent's list_child linked list */
-  list_push_back(&parent->list_child,&t->child_elem);
-  t->parent = parent;
-
   /* Prepare thread for first run by initializing its stack.
      Do this atomically so intermediate values for the 'stack' 
      member cannot be observed. */
@@ -210,7 +206,11 @@ thread_create (const char *name, int priority,
   sf->ebp = 0;
 
   intr_set_level (old_level);
-
+  
+  /* Add thread at parent's list_child linked list */
+  list_push_back(&parent->list_child,&t->child_elem);
+  t->parent = parent;
+  
   /* Add to run queue. */
   thread_unblock (t);
 
