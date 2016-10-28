@@ -24,13 +24,12 @@ static void
 syscall_handler (struct intr_frame *f) 
 {
   int syscallnum;
-  // XXX : How can I handle system call? make base structure.
-  // use switch-case?
-  // Interrupt vector no is known as 0x30
+  
   if(!f->esp || !is_user_vaddr(f->esp) || f->esp < (void*)0x0)
     usercall_exit(-1);
   //hex_dump(f->esp,f->esp,212,true);
   syscallnum = *(int*)f->esp;
+  //printf("syscallnum : %d thread : %s\n",syscallnum,thread_current()->name);
   switch(syscallnum)
     {
       /* implement later */
@@ -49,6 +48,9 @@ syscall_handler (struct intr_frame *f)
       usercall_exec(*(const char**)(f->esp+4));
       break;
     case SYS_WAIT:
+      if(!is_user_vaddr(f->esp+4))
+	usercall_exit(-1);
+      f->eax = usercall_wait(*(pid_t *)(f->esp+4));
       break;
       /* Not implement */
     case SYS_CREATE:
@@ -119,13 +121,29 @@ usercall_halt(void)
   shutdown_power_off();
 }
 
-// TODO : detach thread from thread list
 void
 usercall_exit(int status)
 {
   struct thread *curr = thread_current();
-  
+  // TODO : Fix it.
+  while(!list_empty(&curr->list_child))
+    {
+      struct list_elem *e 
+	= list_pop_front(&curr->list_child);
+      struct thread *child
+	= list_entry(e,struct thread, child_elem);
+      process_wait(child->tid);
+    }
+  curr->return_status = status;
   printf("%s: exit(%d)\n",curr->name,status);
+  
+  if(curr->parent)
+    {
+      curr->collect_me = true;
+      //sema_up(&curr->parent->sema);
+      sema_down(&curr->sema);
+    }
+
   thread_exit();
 }
 
@@ -133,33 +151,16 @@ pid_t
 usercall_exec(const char *file)
 {
   tid_t child_tid = process_execute(file);
-
   return child_tid;
 }
 
 int
 usercall_wait(pid_t pid UNUSED)
 {
-  struct thread *child;
-  return pid;
+  int retval = process_wait(pid);
+  return retval;
 }
 
-bool
-usercall_remove(const char *file UNUSED)
-{
-}
-
-int
-usercall_open(const char *file UNUSED)
-{
-}
-
-int
-usercall_filesize(int fd UNUSED)
-{
-}
-
-// TODO
 int
 usercall_read(int fd, void *buffer, unsigned size)
 {
@@ -204,27 +205,11 @@ usercall_write(int fd, const void *buffer, unsigned size)
     }
 }
 
-void
-usercall_seek(int fd UNUSED, unsigned position UNUSED)
-{
-}
-
-unsigned
-usercall_tell(int fd UNUSED)
-{
-}
-
-void
-usercall_close(int fd UNUSED)
-{
-}
-
 int
 usercall_pibo(int n)
 {
   int i;
   int a = 0, b = 1, c = 0;
-  printf("in pibo(not fibo) n is %d\n",n);
   for(i = 1; i<= n; i++)
     {
       a = b;
