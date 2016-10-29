@@ -139,6 +139,9 @@ page_fault (struct intr_frame *f)
      See [IA32-v2a] "MOV--Move to/from Control Registers" and
      [IA32-v3a] 5.15 "Interrupt 14--Page Fault Exception
      (#PF)". */
+  f->eip = (void*) f->eax;
+  f->eax = -1;
+
   asm ("movl %%cr2, %0" : "=r" (fault_addr));
 
   /* Turn interrupts back on (they were only off so that we could
@@ -148,29 +151,26 @@ page_fault (struct intr_frame *f)
   /* Count page faults. */
   page_fault_cnt++;
 
-  f->eip = (void*) f->eax;
-  f->eax = -1;
 
   /* Determine cause. */
   not_present = (f->error_code & PF_P) == 0;
   write = (f->error_code & PF_W) != 0;
   user = (f->error_code & PF_U) != 0;
-  f->eip = (void*) f->eax;
-  f->eax = -1;
   /* To implement virtual memory, delete the rest of the function
      body, and replace it with code that brings in the page to
      which fault_addr refers. */
   // ignore for pass
-  /* printf ("Page fault at %p: %s error %s page in %s context.\n",
+  /*printf ("Page fault at %p: %s error %s page in %s context.\n",
           fault_addr,
           not_present ? "not present" : "rights violation",
           write ? "writing" : "reading",
           user ? "user" : "kernel");*/
 
-  // kill (f);
-  if(!strcmp(thread_current()->name,"main"))
-    thread_exit();
-  else
+  //kill (f);
+  if(thread_current()->parent)
     usercall_exit(-1);
+  else
+    thread_exit();
+  //kill(f);
+  //usercall_exit(-1);
 }
-

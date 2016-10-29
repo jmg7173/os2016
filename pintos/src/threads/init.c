@@ -128,10 +128,9 @@ main (void)
 #endif
 
   printf ("Boot complete.\n");
-  
+
   /* Run actions specified on kernel command line. */
   run_actions (argv);
-
   /* Finish up. */
   shutdown ();
   thread_exit ();
@@ -323,7 +322,6 @@ run_actions (char **argv)
     {
       const struct action *a;
       int i;
-
       /* Find action name. */
       for (a = actions; ; a++)
         if (a->name == NULL)

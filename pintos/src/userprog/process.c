@@ -148,10 +148,10 @@ process_wait (tid_t child_tid)
 
   child->is_waited = true;
 
-  while(child->wait_load || child->wait_exec);
   sema_up(&child->sema);
-  while(!child->collect_me)
-    thread_yield();
+  parent->wait_exec = true;
+  sema_down(&parent->sema);
+  
   return_status = child->return_status;
   sema_up(&child->sema);
   return return_status;
@@ -287,7 +287,6 @@ load (const char *file_name, void (**eip) (void), void **esp)
   char *save_ptr;
   char *arg_tmp, *token;
   char **args;
-
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create ();
   if (t->pagedir == NULL) 

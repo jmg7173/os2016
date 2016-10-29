@@ -132,18 +132,13 @@ usercall_exit(int status)
     }
   curr->return_status = status;
   printf("%s: exit(%d)\n",curr->name,status);
-  
-  curr->wait_load = false;
-  curr->wait_exec = false;
-  
+ 
   /* Wait for parent to process_wait me */
+  curr->parent->wait_exec = false;
   sema_up(&curr->parent->sema);
-  if(curr->parent)
-    {
-      list_remove(&curr->child_elem);
-      curr->collect_me = true;
-    }
   sema_down(&curr->sema);
+  if(curr->parent)
+    list_remove(&curr->child_elem);
   thread_exit();
 }
 
