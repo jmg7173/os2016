@@ -1,8 +1,11 @@
 #include "userprog/syscall.h"
+#include "userprog/process.h"
 #include <stdio.h>
 #include <syscall-nr.h>
 #include <console.h>
+#include <list.h>
 #include "threads/interrupt.h"
+#include "threads/synch.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
 #include "devices/input.h"
@@ -24,13 +27,12 @@ static void
 syscall_handler (struct intr_frame *f) 
 {
   int syscallnum;
-  // XXX : How can I handle system call? make base structure.
-  // use switch-case?
-  // Interrupt vector no is known as 0x30
+  
   if(!f->esp || !is_user_vaddr(f->esp) || f->esp < (void*)0x0)
     usercall_exit(-1);
   //hex_dump(f->esp,f->esp,212,true);
   syscallnum = *(int*)f->esp;
+  //printf("syscallnum : %d thread : %s\n",syscallnum,thread_current()->name);
   switch(syscallnum)
     {
       /* implement later */
@@ -46,9 +48,12 @@ syscall_handler (struct intr_frame *f)
     case SYS_EXEC:
       if(!is_user_vaddr(f->esp+4))
 	usercall_exit(-1);
-      usercall_exec(*(const char**)(f->esp+4));
+      f->eax = usercall_exec(*(const char**)(f->esp+4));
       break;
     case SYS_WAIT:
+      if(!is_user_vaddr(f->esp+4))
+	usercall_exit(-1);
+      f->eax = usercall_wait(*(pid_t *)(f->esp+4));
       break;
       /* Not implement */
     case SYS_CREATE:
@@ -57,9 +62,7 @@ syscall_handler (struct intr_frame *f)
     case SYS_FILESIZE:
       break;
     case SYS_READ:
-      if(!is_user_vaddr(f->esp+4) ||
-	 !is_user_vaddr(f->esp+8) ||
-	 !is_user_vaddr(f->esp+12))
+      if(!is_user_vaddr(f->esp+12))
 	usercall_exit(-1);
       f->eax = usercall_read(*(int*)(f->esp+4),
 			     *(void**)(f->esp+8),
@@ -67,9 +70,7 @@ syscall_handler (struct intr_frame *f)
 
       break;
     case SYS_WRITE:
-      if(!is_user_vaddr(f->esp+4) ||
-	 !is_user_vaddr(f->esp+8) ||
-	 !is_user_vaddr(f->esp+12))
+      if(!is_user_vaddr(f->esp+12))
 	usercall_exit(-1);
       f->eax = usercall_write(*(int*)(f->esp+4),
 			      *(const void**)(f->esp+8),
@@ -82,10 +83,7 @@ syscall_handler (struct intr_frame *f)
       f->eax = usercall_pibo(*(int*)(f->esp+4));
       break;
     case SYS_SUM4:
-      if(!is_user_vaddr(f->esp+4) ||
-	 !is_user_vaddr(f->esp+8) ||
-	 !is_user_vaddr(f->esp+12)||
-	 !is_user_vaddr(f->esp+16))
+      if(!is_user_vaddr(f->esp+16))
 	usercall_exit(-1);
       f->eax = usercall_sum4(*(int*)(f->esp+4),
 			      *(int*)(f->esp+8),
@@ -119,47 +117,43 @@ usercall_halt(void)
   shutdown_power_off();
 }
 
-// TODO : detach thread from thread list
 void
 usercall_exit(int status)
 {
   struct thread *curr = thread_current();
-  
+  curr->wait_exec = true;
+  while(!list_empty(&curr->list_child))
+    {
+      struct list_elem *e 
+	= list_pop_front(&curr->list_child);
+      struct thread *child
+	= list_entry(e,struct thread, child_elem);
+      process_wait(child->tid);
+    }
+  curr->return_status = status;
   printf("%s: exit(%d)\n",curr->name,status);
+ 
+  /* Wait for parent to process_wait me */
+  curr->parent->wait_exec = false;
+  sema_up(&curr->parent->sema);
+  sema_down(&curr->sema);
+  if(curr->parent)
+    list_remove(&curr->child_elem);
   thread_exit();
 }
 
 pid_t
 usercall_exec(const char *file)
 {
-  tid_t child_tid = process_execute(file);
-
-  return child_tid;
+  return process_execute(file);
 }
 
 int
-usercall_wait(pid_t pid UNUSED)
+usercall_wait(pid_t pid)
 {
-  struct thread *child;
-  return pid;
+  return process_wait(pid);
 }
 
-bool
-usercall_remove(const char *file UNUSED)
-{
-}
-
-int
-usercall_open(const char *file UNUSED)
-{
-}
-
-int
-usercall_filesize(int fd UNUSED)
-{
-}
-
-// TODO
 int
 usercall_read(int fd, void *buffer, unsigned size)
 {
@@ -204,27 +198,11 @@ usercall_write(int fd, const void *buffer, unsigned size)
     }
 }
 
-void
-usercall_seek(int fd UNUSED, unsigned position UNUSED)
-{
-}
-
-unsigned
-usercall_tell(int fd UNUSED)
-{
-}
-
-void
-usercall_close(int fd UNUSED)
-{
-}
-
 int
 usercall_pibo(int n)
 {
   int i;
   int a = 0, b = 1, c = 0;
-  printf("in pibo(not fibo) n is %d\n",n);
   for(i = 1; i<= n; i++)
     {
       a = b;

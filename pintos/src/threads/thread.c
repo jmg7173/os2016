@@ -167,6 +167,7 @@ thread_create (const char *name, int priority,
                thread_func *function, void *aux) 
 {
   struct thread *t;
+  struct thread *parent = thread_current();
   struct kernel_thread_frame *kf;
   struct switch_entry_frame *ef;
   struct switch_threads_frame *sf;
@@ -205,7 +206,11 @@ thread_create (const char *name, int priority,
   sf->ebp = 0;
 
   intr_set_level (old_level);
-
+  
+  /* Add thread at parent's list_child linked list */
+  list_push_back(&parent->list_child,&t->child_elem);
+  t->parent = parent;
+  
   /* Add to run queue. */
   thread_unblock (t);
 
@@ -470,6 +475,14 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
+  
+  t->parent = NULL;
+  t->is_waited = false;
+  t->wait_exec = false;
+  t->wait_load = false;
+  t->collect_me = false;
+  list_init(&t->list_child);
+  sema_init(&t->sema,0);
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and
