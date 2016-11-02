@@ -1,4 +1,5 @@
-### 2016 sogang-pintos project - made by Jeong Min Gyo
+# 2016 sogang-pintos project 
+### made by Jeong Min Gyo
 
 ## Program flow
 (skip initializing)
@@ -14,7 +15,7 @@
       - It runs at main thread.
 
 ## Synchronization strategy
-Using semaphore
+### Using semaphore
 
 1. Parent thread make child thread(userprog/process.c - process\_execute
    thread\_create)
