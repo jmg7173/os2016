@@ -2,6 +2,7 @@
 
 ## Program flow
 (skip initializing)
+
 1. Start main from thread/init.c
   - Get argv and init.
   - call run\_actions
@@ -14,6 +15,7 @@
 
 ## Synchronization strategy
 Using semaphore
+
 1. Parent thread make child thread(userprog/process.c - process\_execute
    thread\_create)
 1. Then sema down parent thread to check if child thread loaded well.
