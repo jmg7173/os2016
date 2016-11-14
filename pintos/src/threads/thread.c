@@ -481,7 +481,9 @@ init_thread (struct thread *t, const char *name, int priority)
   t->wait_exec = false;
   t->wait_load = false;
   t->collect_me = false;
+  t->newfd = 2;
   list_init(&t->list_child);
+  list_init(&t->files);
   sema_init(&t->sema,0);
 }
 

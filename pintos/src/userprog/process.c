@@ -462,7 +462,13 @@ load (const char *file_name, void (**eip) (void), void **esp)
       free(args);
     }
 
-  file_close (file);
+  if (success)
+    {
+      struct file_elem *f_exec = malloc(sizeof(struct file_elem));
+      f_exec->f = file;
+      file_deny_write(f_exec->f);
+      list_push_back(&thread_current()->files, &f_exec->elem);
+    }
   return success;
 }
 /* load() helpers. */

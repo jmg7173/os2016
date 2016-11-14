@@ -5,6 +5,7 @@
 #include <list.h>
 #include <stdint.h>
 #include "threads/synch.h"
+#include "filesys/file.h"
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -91,8 +92,6 @@ struct thread
     int priority;                       /* Priority. */
     struct list_elem allelem;           /* List element for all threads list. */
 
-    /* Make a new sync! */
-
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 
@@ -108,7 +107,10 @@ struct thread
     bool collect_me;			/* Notice that job finish */
     
     int return_status;
-
+    
+    /* Project 2-2 */
+    struct list files;
+    int newfd;				/* fd starts from 2. 0, 1 for STD IN/OUT */
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
@@ -118,6 +120,14 @@ struct thread
     unsigned magic;                     /* Detects stack overflow. */
   };
 
+#define MAX_FILE_NO 128
+
+struct file_elem
+  {
+    struct file *f;
+    int fd;
+    struct list_elem elem;
+  };
 /* If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.
    Controlled by kernel command-line option "-o mlfqs". */
