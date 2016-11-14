@@ -19,9 +19,6 @@ syscall_init (void)
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
 }
 
-// XXX : Modify f's eax, esp and so on?? Reference intr_handler
-// XXX : To Pass test, implement exec system call.
-// TODO : implement write, read system call first!
 /* Interrupt handle function */
 static void
 syscall_handler (struct intr_frame *f) 
@@ -35,7 +32,6 @@ syscall_handler (struct intr_frame *f)
   //printf("syscallnum : %d thread : %s\n",syscallnum,thread_current()->name);
   switch(syscallnum)
     {
-      /* implement later */
       /* Project 2 */
     case SYS_HALT:
       usercall_halt();
@@ -154,6 +150,26 @@ usercall_wait(pid_t pid)
   return process_wait(pid);
 }
 
+bool
+usercall_create(const char *file, unsigned initial_size)
+{
+}
+
+bool
+usercall_remove(const char *file)
+{
+}
+
+int
+usercall_open(const char *file)
+{
+}
+
+int
+usercall_filesize(int fd)
+{
+}
+
 int
 usercall_read(int fd, void *buffer, unsigned size)
 {
@@ -196,6 +212,21 @@ usercall_write(int fd, const void *buffer, unsigned size)
   else
     {
     }
+}
+
+void
+usercall_seek(int fd, unsigned position)
+{
+}
+
+unsigned
+usercall_tell(int fd)
+{
+}
+
+void
+usercall_close(int fd)
+{
 }
 
 int
