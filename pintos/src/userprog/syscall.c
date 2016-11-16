@@ -421,21 +421,6 @@ usercall_close(int fd)
     }
 }
 
-void
-usercall_seek(int fd, unsigned position)
-{
-}
-
-unsigned
-usercall_tell(int fd)
-{
-}
-
-void
-usercall_close(int fd)
-{
-}
-
 int
 usercall_pibo(int n)
 {
