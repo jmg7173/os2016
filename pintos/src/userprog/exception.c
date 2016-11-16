@@ -1,4 +1,5 @@
 #include "userprog/exception.h"
+#include "userprog/pagedir.h"
 #include "userprog/syscall.h"
 #include <inttypes.h>
 #include <stdio.h>
@@ -7,6 +8,7 @@
 #include "userprog/gdt.h"
 #include "threads/interrupt.h"
 #include "threads/thread.h"
+#include "threads/vaddr.h"
 
 /* Number of page faults processed. */
 static long long page_fault_cnt;
@@ -173,4 +175,13 @@ page_fault (struct intr_frame *f)
     thread_exit();
   //kill(f);
   //usercall_exit(-1);
+}
+
+bool
+check_user_vptr(const void *ptr)
+{
+  if(ptr && is_user_vaddr(ptr)
+     && pagedir_get_page(thread_current()->pagedir, ptr))
+    return true;
+  return false;
 }

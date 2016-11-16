@@ -1,5 +1,6 @@
 #include "userprog/syscall.h"
 #include "userprog/process.h"
+#include "userprog/exception.h"
 #include <stdio.h>
 #include <syscall-nr.h>
 #include <console.h>
@@ -245,17 +246,14 @@ bool
 usercall_create(const char *file, unsigned initial_size)
 {
   bool result = false;
-  if(!is_user_vaddr(file) || file == NULL)
-    {
-      usercall_exit(-1);
-      return result;
-    }
-  else
-    {
-      lock_acquire(&syslock);
-      result = filesys_create(file, initial_size);
-      lock_release(&syslock);
-    }
+  
+  if(!check_user_vptr(file))
+    usercall_exit(-1);
+  
+  lock_acquire(&syslock);
+  result = filesys_create(file, initial_size);
+  lock_release(&syslock);
+
   return result;
 }
 
@@ -264,11 +262,8 @@ usercall_remove(const char *file)
 {
   bool result = false;
 
-  if(file == NULL || !is_user_vaddr(file))
-    {
-      usercall_exit(-1);
-      return result;
-    }
+  if(!check_user_vptr(file))
+    usercall_exit(-1);
 
   lock_acquire(&syslock);
   result = filesys_remove(file);
@@ -283,11 +278,8 @@ usercall_open(const char *file)
   struct thread *curr = thread_current();
   struct file_elem *f_elem;
   
-  if(file == NULL || !is_user_vaddr(file))
-    {
-      usercall_exit(-1);
-      return -1;
-    }
+  if(!check_user_vptr(file))
+    usercall_exit(-1);
 
   f_elem = malloc(sizeof(struct file_elem));
 
@@ -330,6 +322,9 @@ usercall_read(int fd, void *buffer, unsigned size)
 {
   int retval = -1;
   /* For Standard Input */
+  if(!check_user_vptr(buffer))
+    usercall_exit(-1);
+
   if(fd == 0)
     {
       unsigned i;
@@ -358,6 +353,9 @@ usercall_write(int fd, const void *buffer, unsigned size)
 {
   int retval = -1;
   /* For Invalid fd */
+  if(!check_user_vptr(buffer))
+    usercall_exit(-1);
+
   if(fd <= 0)
     usercall_exit(-1);
   /* For Standard Output */
