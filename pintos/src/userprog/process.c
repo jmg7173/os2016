@@ -43,17 +43,18 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
  
-  str_tmp = calloc(strlen(file_name)+1,sizeof(char));
+  str_tmp = palloc_get_page(0);
   strlcpy (str_tmp, file_name, strlen(file_name)+1);
   token = strtok_r(str_tmp, " ", &save_ptr);
-  
+
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (token, PRI_DEFAULT, start_process, fn_copy);
- 
+
   /* If thread create has error, free allocated page */
   if (tid == TID_ERROR)
-    palloc_free_page (fn_copy);
-  
+    palloc_free_page (fn_copy);  
+  palloc_free_page(str_tmp);
+
   parent->wait_load = true;
   sema_down(&parent->sema);
   /* check if load success */
@@ -86,6 +87,7 @@ start_process (void *file_name_)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (file_name, &if_.eip, &if_.esp);
+  /* Create a new thread to execute FILE_NAME. */
   /* If load failed, quit. */
   if (!success)
     {
@@ -285,8 +287,9 @@ load (const char *file_name, void (**eip) (void), void **esp)
   unsigned int addr_tmp;
   uint8_t word_align = 0;
   char *save_ptr;
-  char *arg_tmp, *token;
-  char **args;
+  char *arg_tmp = NULL, *token;
+  char *args[128];
+
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create ();
   if (t->pagedir == NULL) 
@@ -294,23 +297,15 @@ load (const char *file_name, void (**eip) (void), void **esp)
   process_activate ();
 
   /* Parse file_name */
-  arg_tmp = malloc (strlen(file_name+1)); 
-  memcpy(arg_tmp,file_name,strlen(file_name));
-  arg_tmp[strlen(file_name)] = '\0';
-  for (token = strtok_r(arg_tmp, " ", &save_ptr); token != NULL;
-       argc++,token = strtok_r(NULL, " ", &save_ptr));
-
-  args = malloc (argc * sizeof(char*));
-  args_addr = malloc((argc+1) * sizeof(unsigned int));
-  memcpy(arg_tmp,file_name,strlen(file_name));
-
-  for (i = 0,token = strtok_r(arg_tmp, " ", &save_ptr); token != NULL;
-       token = strtok_r(NULL, " ", &save_ptr), i++)
+  arg_tmp = palloc_get_page(0);
+  strlcpy(arg_tmp, file_name, PGSIZE);
+  for(argc = 0, token = strtok_r(arg_tmp, " ", &save_ptr); token != NULL;
+      token = strtok_r(NULL, " ", &save_ptr), argc++)
     {
-      args[i] = calloc(strlen(token)+1, sizeof(char));
-      memcpy(args[i],token,strlen(token));
+      args[argc] = token;
     }
-  free(arg_tmp);
+
+  args_addr = malloc((argc+1) * sizeof(unsigned int));
 
   /* Open executable file. */
   file = filesys_open (args[0]);
@@ -454,13 +449,10 @@ load (const char *file_name, void (**eip) (void), void **esp)
   /* We arrive here whether the load is successful or not. */
 
   /* Free allocated memory */
+
+  palloc_free_page(arg_tmp);
   if(args_addr)
-    {
-      free(args_addr);
-      for(i = 0; i<argc; i++)
-	free(args[i]);
-      free(args);
-    }
+    free(args_addr);
 
   if (success)
     {
