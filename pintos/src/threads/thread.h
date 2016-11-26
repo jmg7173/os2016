@@ -120,7 +120,7 @@ struct thread
     unsigned magic;                     /* Detects stack overflow. */
   };
 
-#define MAX_FILE_NO 128
+#define MAX_FILE_NUM 128
 
 struct file_elem
   {

@@ -294,7 +294,7 @@ usercall_open(const char *file)
     }
 
   f_elem->fd = curr->newfd++;
-  if(f_elem->fd >= MAX_FILE_NO)
+  if(f_elem->fd >= MAX_FILE_NUM)
     {
       file_close(f_elem->f);
       free(f_elem);
