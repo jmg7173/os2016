@@ -210,7 +210,7 @@ thread_create (const char *name, int priority,
   /* Add thread at parent's list_child linked list */
   list_push_back(&parent->list_child,&t->child_elem);
   t->parent = parent;
-  
+  t->nice = parent->nice;
   /* Add to run queue. */
   thread_unblock (t);
 
@@ -360,17 +360,16 @@ thread_get_priority (void)
 
 /* Sets the current thread's nice value to NICE. */
 void
-thread_set_nice (int nice UNUSED) 
+thread_set_nice (int nice) 
 {
-  /* Not yet implemented. */
+  thread_current()->nice = nice;
 }
 
 /* Returns the current thread's nice value. */
 int
 thread_get_nice (void) 
 {
-  /* Not yet implemented. */
-  return 0;
+  return thread_current()->nice;
 }
 
 /* Returns 100 times the system load average. */
@@ -482,6 +481,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->wait_load = false;
   t->collect_me = false;
   t->newfd = 2;
+  t->nice = 0;
   list_init(&t->list_child);
   list_init(&t->files);
   sema_init(&t->sema,0);
