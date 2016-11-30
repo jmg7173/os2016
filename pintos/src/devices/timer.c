@@ -192,6 +192,7 @@ timer_interrupt (struct intr_frame *args UNUSED)
       struct sleep_elem *se = list_entry(e, struct sleep_elem, elem);
       if(timer_ticks() >= se->tick)
 	{
+	  e = list_prev(e);
 	  list_remove(&se->elem);
 	  thread_unblock(se->t);
 	}
