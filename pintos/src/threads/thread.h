@@ -121,7 +121,6 @@ struct thread
     unsigned magic;                     /* Detects stack overflow. */
   };
 
-/* For proj2-2 */
 #define MAX_FILE_NUM 128
 
 struct file_elem
@@ -130,15 +129,6 @@ struct file_elem
     int fd;
     struct list_elem elem;
   };
-
-/* For proj1 thread sleep */
-struct sleep_elem
-  {
-    struct thread *t;
-    struct list_elem elem;
-    int64_t tick;
-  };
-
 /* If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.
    Controlled by kernel command-line option "-o mlfqs". */

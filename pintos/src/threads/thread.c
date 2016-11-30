@@ -362,9 +362,7 @@ thread_get_priority (void)
 void
 thread_set_nice (int nice) 
 {
-  if(nice < -20) thread_current()->nice = -20;
-  else if(nice > 20) thread_current()->nice = 20;
-  else thread_current()->nice = nice;
+  thread_current()->nice = nice;
 }
 
 /* Returns the current thread's nice value. */
