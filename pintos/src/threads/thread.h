@@ -7,6 +7,10 @@
 #include "threads/synch.h"
 #include "filesys/file.h"
 
+#ifndef USERPROG
+extern bool thread_prior_aging; /* Project 1 Thread aging */
+#endif
+
 /* States in a thread's life cycle. */
 enum thread_status
   {
@@ -166,7 +170,7 @@ void thread_yield (void);
 /* Performs some operation on thread t, given auxiliary data AUX. */
 typedef void thread_action_func (struct thread *t, void *aux);
 void thread_foreach (thread_action_func *, void *);
-
+void thread_aging(void);
 int thread_get_priority (void);
 void thread_set_priority (int);
 
@@ -177,5 +181,4 @@ int thread_get_load_avg (void);
 bool priority_lf(const struct list_elem *,
 		 const struct list_elem *,
 		 void *);
-
 #endif /* threads/thread.h */

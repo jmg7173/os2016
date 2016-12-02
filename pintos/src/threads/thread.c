@@ -49,11 +49,16 @@ struct kernel_thread_frame
 static long long idle_ticks;    /* # of timer ticks spent idle. */
 static long long kernel_ticks;  /* # of timer ticks in kernel threads. */
 static long long user_ticks;    /* # of timer ticks in user programs. */
+static long long aging_ticks;
 
 /* Scheduling. */
 #define TIME_SLICE 4            /* # of timer ticks to give each thread. */
 static unsigned thread_ticks;   /* # of timer ticks since last yield. */
 
+#ifndef USERPROG
+bool thread_prior_aging;	/* Project 1 thread aging */
+#define AGING_SLICE 100
+#endif
 /* If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.
    Controlled by kernel command-line option "-o mlfqs". */
@@ -137,6 +142,10 @@ thread_tick (void)
   /* Enforce preemption. */
   if (++thread_ticks >= TIME_SLICE)
     intr_yield_on_return ();
+#ifndef USERPROG
+  if(thread_prior_aging == true && aging_ticks % AGING_SLICE == 0)
+    thread_aging();
+#endif
 }
 
 /* Prints thread statistics. */
@@ -349,6 +358,31 @@ thread_foreach (thread_action_func *func, void *aux)
     }
 }
 
+void
+thread_aging()
+{
+  int cur_priority = thread_get_priority();
+  struct list_elem *e;
+
+  for(e = list_begin(&ready_list); e != list_end(&ready_list);
+      e = list_next(e))
+    {
+      if(list_entry(e, struct thread, elem)->priority < cur_priority)
+	{
+	  for(;e != list_end(&ready_list); e = list_next(e))
+	    {
+	      struct thread *t = list_entry(e, struct thread, elem);
+	      t->priority++;
+	      if(t->priority > PRI_MAX)
+		t->priority = PRI_MAX;
+	    }
+	  list_sort(&ready_list, priority_lf, NULL);
+	  break;
+	}
+    }
+
+}
+
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
 thread_set_priority (int new_priority) 
@@ -389,7 +423,7 @@ int
 thread_get_load_avg (void) 
 {
   /* Not yet implemented. */
-  return 0;
+  return thread_current()->load_avg;
 }
 
 /* Returns 100 times the current thread's recent_cpu value. */
@@ -397,9 +431,9 @@ int
 thread_get_recent_cpu (void) 
 {
   /* Not yet implemented. */
-  return 0;
+  return thread_current()->recent_cpu;
 }
-
+
 /* Idle thread.  Executes when no other thread is ready to run.
 
    The idle thread is initially put on the ready list by
@@ -617,7 +651,7 @@ allocate_tid (void)
 
   return tid;
 }
-
+
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
