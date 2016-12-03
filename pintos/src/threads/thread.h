@@ -30,6 +30,10 @@ typedef int tid_t;
 #define PRI_DEFAULT 31                  /* Default priority. */
 #define PRI_MAX 63                      /* Highest priority. */
 
+/* Thread BSD Fixed Point Real Arithmetic */
+#define FIXED_q 14
+#define FIXED_p 17
+#define FIXED_f (1<<FIXED_q)
 /* A kernel thread or user process.
 
    Each thread structure is stored in its own 4 kB page.  The
@@ -116,6 +120,12 @@ struct thread
     /* Project 2-2 */
     struct list files;
     int newfd;				/* fd starts from 2. 0, 1 for STD IN/OUT */
+
+    /* Project 1 */
+    /* Fixed point real parameters */
+    uint32_t load_avg;
+    uint32_t recent_cpu;
+
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
@@ -171,14 +181,19 @@ void thread_yield (void);
 typedef void thread_action_func (struct thread *t, void *aux);
 void thread_foreach (thread_action_func *, void *);
 void thread_aging(void);
+void thread_sort_readyqueue(void);
 int thread_get_priority (void);
 void thread_set_priority (int);
-
 int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
+void thread_update_load_avg(void);
 bool priority_lf(const struct list_elem *,
 		 const struct list_elem *,
 		 void *);
+
+/* Thread action functions for each tick */
+void thread_update_recent_cpu(struct thread *t, void *aux);
+void thread_update_priority(struct thread *t, void *aux);
 #endif /* threads/thread.h */

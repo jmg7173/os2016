@@ -50,7 +50,7 @@ static long long idle_ticks;    /* # of timer ticks spent idle. */
 static long long kernel_ticks;  /* # of timer ticks in kernel threads. */
 static long long user_ticks;    /* # of timer ticks in user programs. */
 static long long aging_ticks;
-
+static uint32_t load_avg = 0;
 /* Scheduling. */
 #define TIME_SLICE 4            /* # of timer ticks to give each thread. */
 static unsigned thread_ticks;   /* # of timer ticks since last yield. */
@@ -139,6 +139,9 @@ thread_tick (void)
   else
     kernel_ticks++;
 
+  if (t != idle_thread && t->status == THREAD_RUNNING)
+    t->recent_cpu += FIXED_f;
+
   /* Enforce preemption. */
   if (++thread_ticks >= TIME_SLICE)
     intr_yield_on_return ();
@@ -220,6 +223,7 @@ thread_create (const char *name, int priority,
   list_push_back(&parent->list_child,&t->child_elem);
   t->parent = parent;
   t->nice = parent->nice;
+  t->recent_cpu = parent->recent_cpu;
 
   /* Add to run queue. */
   thread_unblock (t);
@@ -383,15 +387,25 @@ thread_aging()
 
 }
 
+void
+thread_sort_readyqueue()
+{
+  list_sort(&ready_list, priority_lf, NULL);
+}
+
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
 thread_set_priority (int new_priority) 
 {
   struct thread* tmp;
+  if(new_priority > PRI_MAX)
+    new_priority = PRI_MAX;
+  else if(new_priority < PRI_MIN)
+    new_priority = PRI_MIN;
   thread_current ()->priority = new_priority;
   list_sort(&ready_list, priority_lf, NULL);
   tmp = list_entry(list_begin(&ready_list), struct thread, elem);
-  if(new_priority < tmp->priority)
+  if(is_thread(tmp) && new_priority < tmp->priority)
     thread_yield();
 }
 
@@ -406,9 +420,18 @@ thread_get_priority (void)
 void
 thread_set_nice (int nice) 
 {
-  if(nice < -20) thread_current()->nice = -20;
-  else if(nice > 20) thread_current()->nice = 20;
-  else thread_current()->nice = nice;
+  struct thread *t = thread_current();
+  if(nice < -20) t->nice = -20;
+  else if(nice > 20) t->nice = 20;
+  else t->nice = nice;
+
+  thread_update_priority(t, NULL);
+  thread_sort_readyqueue();
+
+  //printf("thread : %s priority : %d nice : %d\n",thread_name(),thread_get_priority(),thread_get_nice());
+  struct thread *tmp = list_entry(list_begin(&ready_list), struct thread, elem);
+  if(is_thread(tmp) && tmp->priority > t->priority)
+    thread_yield();
 }
 
 /* Returns the current thread's nice value. */
@@ -422,16 +445,92 @@ thread_get_nice (void)
 int
 thread_get_load_avg (void) 
 {
-  /* Not yet implemented. */
-  return thread_current()->load_avg;
+  //return (load_avg*100+FIXED_f/2)/FIXED_f;
+  return load_avg*100/FIXED_f;
 }
 
 /* Returns 100 times the current thread's recent_cpu value. */
 int
 thread_get_recent_cpu (void) 
 {
-  /* Not yet implemented. */
-  return thread_current()->recent_cpu;
+  uint32_t recent_cpu = thread_current()->recent_cpu;
+  return recent_cpu*100/FIXED_f;
+}
+
+void
+thread_update_load_avg(void)
+{
+  //printf("[DEBUG]current : %s, status : %d, priority : %d\n",
+	// thread_current()->name, thread_current()->status,
+	// thread_current()->priority);
+  //printf("[DEBUG]ready_thread_num : %d\n",ready_thread_num);
+  //printf("[DEBUG] load avg before : %x\n",load_avg);
+  //printf("[DEBUG] load avg after : %x\n",load_avg);
+  //printf("[DEBUG] load avg : %d.%02d.\n",tmp_load/100, tmp_load%100);
+
+  int t_num = list_size(&ready_list);
+  if(thread_current() != idle_thread &&
+     thread_current()->status == THREAD_RUNNING)
+    t_num++;
+  load_avg = (load_avg * 59 + t_num*FIXED_f) / 60;
+  //printf("[DEBUG] load avg : %d.%02d\n",thread_get_load_avg()/100, thread_get_load_avg()%100);
+}
+
+/* Thread action functions for update recent_cpu and load_avg */
+void
+thread_update_recent_cpu(struct thread *t, void *aux UNUSED)
+{
+/*  uint32_t cur_rc = t->recent_cpu;
+  uint32_t new_rc;
+  uint32_t nice = t->nice * FIXED_f;
+  new_rc = ((int64_t)(2 * load_avg))*FIXED_f/(2 * load_avg + 1);
+  new_rc = ((int64_t)(new_rc))*cur_rc/FIXED_f;
+  new_rc = new_rc + nice;
+  t->recent_cpu = new_rc;*/
+  uint32_t real_nice = (t->nice) * FIXED_f;
+  uint32_t cur_rc = t->recent_cpu;
+  uint32_t new_rc;
+  new_rc = ((int64_t)(2 * load_avg)) * FIXED_f / (2 * load_avg + FIXED_f);
+  new_rc = ((int64_t)new_rc) * cur_rc / FIXED_f;
+  new_rc += real_nice;
+  t->recent_cpu = new_rc;
+}
+
+void
+thread_update_priority(struct thread *t, void *aux UNUSED)
+{
+  if(t == idle_thread)
+    return;
+  /*
+  uint32_t rc = t->recent_cpu;
+  uint32_t real_nice = (t->nice) * FIXED_f;
+  uint32_t real_priority;
+  int new_priority;
+
+  real_priority = PRI_MAX * FIXED_f - (rc / 4) - (real_nice * 2);
+  new_priority = real_priority / FIXED_f;
+  if(new_priority > PRI_MAX)
+    new_priority = PRI_MAX;
+  else if(new_priority < PRI_MIN)
+    new_priority = PRI_MIN;
+  t->priority = new_priority; */
+  int new_priority;
+  uint32_t recent_cpu = t->recent_cpu;
+  uint32_t nice = t->nice * FIXED_f;
+  int forprint = recent_cpu*100/FIXED_f;
+  //printf("[DEBUG]before calculate thread [%s], priority : %d, nice : %d, recent cpu : %d.%02d\n", t->name,t->priority,t->nice, forprint/100, forprint%100);
+
+  new_priority = ((uint32_t)(PRI_MAX * FIXED_f - recent_cpu / 4 - nice *2)) / FIXED_f;
+  //new_priority = PRI_MAX - (recent_cpu/4+FIXED_f/2)/FIXED_f - (t->nice) * 2;
+  //printf("[DEBUG]before save priority : %d\n",new_priority);
+  if(new_priority > PRI_MAX)
+    new_priority = PRI_MAX;
+  else if(new_priority < PRI_MIN)
+    new_priority = PRI_MIN;
+  t->priority = new_priority;
+
+  //printf("[DEBUG]after calculate thread [%s], priority : %d\n",
+//	 t->name,t->priority);
 }
 
 /* Idle thread.  Executes when no other thread is ready to run.
@@ -521,13 +620,20 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
   
+  /* Project 2-1 */
   t->parent = NULL;
   t->is_waited = false;
   t->wait_exec = false;
   t->wait_load = false;
   t->collect_me = false;
+  
+  /* Project 2-2 */
   t->newfd = 2;
+
+  /* Project 1 */
   t->nice = 0;
+  t->recent_cpu = 0;
+
   list_init(&t->list_child);
   list_init(&t->files);
   sema_init(&t->sema,0);
