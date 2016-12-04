@@ -146,7 +146,7 @@ thread_tick (void)
   if (++thread_ticks >= TIME_SLICE)
     intr_yield_on_return ();
 #ifndef USERPROG
-  if(thread_prior_aging == true && aging_ticks % AGING_SLICE == 0)
+  if(thread_prior_aging == true && ++aging_ticks % AGING_SLICE == 0)
     thread_aging();
 #endif
 }
@@ -428,7 +428,6 @@ thread_set_nice (int nice)
   thread_update_priority(t, NULL);
   thread_sort_readyqueue();
 
-  //printf("thread : %s priority : %d nice : %d\n",thread_name(),thread_get_priority(),thread_get_nice());
   struct thread *tmp = list_entry(list_begin(&ready_list), struct thread, elem);
   if(is_thread(tmp) && tmp->priority > t->priority)
     thread_yield();
@@ -445,7 +444,6 @@ thread_get_nice (void)
 int
 thread_get_load_avg (void) 
 {
-  //return (load_avg*100+FIXED_f/2)/FIXED_f;
   return load_avg*100/FIXED_f;
 }
 
@@ -460,33 +458,17 @@ thread_get_recent_cpu (void)
 void
 thread_update_load_avg(void)
 {
-  //printf("[DEBUG]current : %s, status : %d, priority : %d\n",
-	// thread_current()->name, thread_current()->status,
-	// thread_current()->priority);
-  //printf("[DEBUG]ready_thread_num : %d\n",ready_thread_num);
-  //printf("[DEBUG] load avg before : %x\n",load_avg);
-  //printf("[DEBUG] load avg after : %x\n",load_avg);
-  //printf("[DEBUG] load avg : %d.%02d.\n",tmp_load/100, tmp_load%100);
-
   int t_num = list_size(&ready_list);
   if(thread_current() != idle_thread &&
      thread_current()->status == THREAD_RUNNING)
     t_num++;
   load_avg = (load_avg * 59 + t_num*FIXED_f) / 60;
-  //printf("[DEBUG] load avg : %d.%02d\n",thread_get_load_avg()/100, thread_get_load_avg()%100);
 }
 
 /* Thread action functions for update recent_cpu and load_avg */
 void
 thread_update_recent_cpu(struct thread *t, void *aux UNUSED)
 {
-/*  uint32_t cur_rc = t->recent_cpu;
-  uint32_t new_rc;
-  uint32_t nice = t->nice * FIXED_f;
-  new_rc = ((int64_t)(2 * load_avg))*FIXED_f/(2 * load_avg + 1);
-  new_rc = ((int64_t)(new_rc))*cur_rc/FIXED_f;
-  new_rc = new_rc + nice;
-  t->recent_cpu = new_rc;*/
   uint32_t real_nice = (t->nice) * FIXED_f;
   uint32_t cur_rc = t->recent_cpu;
   uint32_t new_rc;
@@ -501,36 +483,18 @@ thread_update_priority(struct thread *t, void *aux UNUSED)
 {
   if(t == idle_thread)
     return;
-  /*
-  uint32_t rc = t->recent_cpu;
-  uint32_t real_nice = (t->nice) * FIXED_f;
-  uint32_t real_priority;
-  int new_priority;
 
-  real_priority = PRI_MAX * FIXED_f - (rc / 4) - (real_nice * 2);
-  new_priority = real_priority / FIXED_f;
-  if(new_priority > PRI_MAX)
-    new_priority = PRI_MAX;
-  else if(new_priority < PRI_MIN)
-    new_priority = PRI_MIN;
-  t->priority = new_priority; */
   int new_priority;
   uint32_t recent_cpu = t->recent_cpu;
   uint32_t nice = t->nice * FIXED_f;
   int forprint = recent_cpu*100/FIXED_f;
-  //printf("[DEBUG]before calculate thread [%s], priority : %d, nice : %d, recent cpu : %d.%02d\n", t->name,t->priority,t->nice, forprint/100, forprint%100);
 
   new_priority = ((uint32_t)(PRI_MAX * FIXED_f - recent_cpu / 4 - nice *2)) / FIXED_f;
-  //new_priority = PRI_MAX - (recent_cpu/4+FIXED_f/2)/FIXED_f - (t->nice) * 2;
-  //printf("[DEBUG]before save priority : %d\n",new_priority);
   if(new_priority > PRI_MAX)
     new_priority = PRI_MAX;
   else if(new_priority < PRI_MIN)
     new_priority = PRI_MIN;
   t->priority = new_priority;
-
-  //printf("[DEBUG]after calculate thread [%s], priority : %d\n",
-//	 t->name,t->priority);
 }
 
 /* Idle thread.  Executes when no other thread is ready to run.

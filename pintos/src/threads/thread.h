@@ -123,7 +123,6 @@ struct thread
 
     /* Project 1 */
     /* Fixed point real parameters */
-    uint32_t load_avg;
     uint32_t recent_cpu;
 
 #ifdef USERPROG
