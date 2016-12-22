@@ -162,6 +162,7 @@ page_fault (struct intr_frame *f)
      body, and replace it with code that brings in the page to
      which fault_addr refers. */
   // ignore for pass
+#ifdef VM
   /*printf ("Page fault at %p: %s error %s page in %s context.\n",
           fault_addr,
           not_present ? "not present" : "rights violation",
@@ -169,10 +170,12 @@ page_fault (struct intr_frame *f)
           user ? "user" : "kernel");*/
 
   //kill (f);
+#else
   if(thread_current()->parent)
     usercall_exit(-1);
   else
     thread_exit();
+#endif
   //kill(f);
   //usercall_exit(-1);
 }
