@@ -23,7 +23,7 @@
             ("pushl %[arg0]; pushl %[number]; int $0x30; addl $8, %%esp" \
                : "=a" (retval)                                           \
                : [number] "i" (NUMBER),                                  \
-                 [arg0] "r" (ARG0)                                       \
+                 [arg0] "g" (ARG0)                                       \
                : "memory");                                              \
           retval;                                                        \
         })
@@ -38,8 +38,8 @@
              "pushl %[number]; int $0x30; addl $12, %%esp"      \
                : "=a" (retval)                                  \
                : [number] "i" (NUMBER),                         \
-                 [arg0] "r" (ARG0),                             \
-                 [arg1] "r" (ARG1)                              \
+                 [arg0] "g" (ARG0),                             \
+                 [arg1] "g" (ARG1)                              \
                : "memory");                                     \
           retval;                                               \
         })
@@ -54,28 +54,25 @@
              "pushl %[number]; int $0x30; addl $16, %%esp"      \
                : "=a" (retval)                                  \
                : [number] "i" (NUMBER),                         \
-                 [arg0] "r" (ARG0),                             \
-                 [arg1] "r" (ARG1),                             \
-                 [arg2] "r" (ARG2)                              \
+                 [arg0] "g" (ARG0),                             \
+                 [arg1] "g" (ARG1),                             \
+                 [arg2] "g" (ARG2)                              \
                : "memory");                                     \
           retval;                                               \
         })
 
-/* Invokes syscall NUMBER, passing arguments ARG0, ARG1, and
-   ARG2, and returns the return value as an `int'. */
-#define syscall4(NUMBER, ARG0, ARG1, ARG2, ARG3)                \
+#define syscall4(NUMBER, ARG0, ARG1, ARG2, ARG3)				\
         ({                                                      \
           int retval;                                           \
           asm volatile                                          \
-            ("pushl %[arg3]; pushl %[arg2]; pushl %[arg1]; "    \
-	     "pushl %[arg0]; pushl %[number];"			\
-	     "int $0x30; addl $20, %%esp"			\
+            ("pushl %[arg3]; pushl %[arg2]; pushl %[arg1]; pushl %[arg0]; "    \
+             "pushl %[number]; int $0x30; addl $20, %%esp"      \
                : "=a" (retval)                                  \
                : [number] "i" (NUMBER),                         \
-                 [arg0] "r" (ARG0),                             \
-                 [arg1] "r" (ARG1),                             \
-                 [arg2] "r" (ARG2),                             \
-                 [arg3] "r" (ARG3)                              \
+                 [arg0] "g" (ARG0),                             \
+                 [arg1] "g" (ARG1),                             \
+                 [arg2] "g" (ARG2),								\
+				 [arg3] "g" (ARG3)								\
                : "memory");                                     \
           retval;                                               \
         })
